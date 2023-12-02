@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
 	"konnek-migration/models"
 	"konnek-migration/utils"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 	// Create source DB connection
-	scDB := utils.GetDBConnection(os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_PORT"), os.Getenv("USERNAME_DB"), os.Getenv("DATABASE_NAME"), os.Getenv("PASSWORD_DB"))
+	scDB := utils.GetDBConnection()
 	defer func(scDB *gorm.DB) {
 		err := scDB.Close()
 		if err != nil {
@@ -24,7 +25,7 @@ func main() {
 	}(scDB)
 
 	// Create destination DB connection
-	dstDB := utils.GetDBConnection(os.Getenv("RE_DATABASE_HOST"), os.Getenv("RE_DATABASE_PORT"), os.Getenv("RE_USERNAME_DB"), os.Getenv("RE_DATABASE_NAME"), os.Getenv("RE_PASSWORD_DB"))
+	dstDB := utils.GetDBNewConnection()
 	defer func(dstDB *gorm.DB) {
 		err := dstDB.Close()
 		if err != nil {
@@ -77,16 +78,51 @@ func main() {
 		scDB = scDB.Limit(limit)
 	}
 
-	var list []models.MtrReasonAvailability
-	if err := scDB.Find(&list).Error; err != nil {
+	var lists []models.MtrReasonAvailability
+	if err := scDB.Find(&lists).Error; err != nil {
 		utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 		return
 	}
+	totalFetch := len(lists)
+
 	debug++
-	utils.WriteLog(fmt.Sprintf("%s [FETCH] DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	debugT = time.Now()
 
 	//Insert into the new database
+	//var errorMessages []string
+	var m models.UnavailableReason
+	for _, list := range lists {
+		m.Id = list.Id
+		m.CompanyId = list.CompanyId
+		m.Type = list.Type
+		m.Reason = list.Reason
+		m.CreatedAt = list.CreatedAt
+		m.CreatedBy = list.CreatedBy
+		m.UpdatedAt = list.UpdatedAt
+		m.UpdatedBy = list.UpdatedBy
+		m.DeletedAt = list.DeletedAt
+		m.DeletedBy = list.DeletedBy
+
+		reiInsertCount := 0
+	reInsert:
+		if err := dstDB.Create(&m).Error; err != nil {
+			if errCode, ok := err.(*pq.Error); ok {
+				//utils.WriteLog(fmt.Sprintf("%s error creating code: %v", logPrefix, errCode.Code), utils.LogLevelDebug)
+				if errCode.Code == "23505" { //unique_violation
+					reiInsertCount++
+					m.Id = uuid.NewV4()
+					if reiInsertCount < 3 {
+						goto reInsert
+					}
+				}
+			}
+			//TODO: write query insert to file
+			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
+			//errorMessages = append(errorMessages, fmt.Sprintf("error: %s; query: %s", err.Error()))
+			continue
+		}
+	}
 
 	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
 }
