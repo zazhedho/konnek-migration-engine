@@ -17,14 +17,14 @@ var dbReportInstance *dbUtils
 var dbOnce sync.Once
 var dbReportOnce sync.Once
 
-func GetDBConnection(host, port, username, dbname, password, sslmode string) *gorm.DB {
+func GetDBConnection(host, port, username, dbname, password, sslmode, dialect string) *gorm.DB {
 	dbOnce.Do(func() {
 		WriteLog("Initialize db connection...", LogLevelInfo)
 		connection := "host=" + host + " port=" + port + " user=" + DecryptCred("db-conn", username) + " dbname=" + dbname +
 			" password=" + DecryptCred("db-conn", password) + " sslmode=" + sslmode
 
 		//WriteLog(connection, LogLevelInfo)
-		db, err := gorm.Open("postgres", connection)
+		db, err := gorm.Open(dialect, connection)
 		if err != nil {
 			log.Fatalln(connection, err)
 			return
