@@ -36,10 +36,16 @@ func main() {
 	logPrefix := fmt.Sprintf("[%v] [unavailable_reason]", logID)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
-	// Migrate
 	tStart := time.Now()
 	debug := 0
 	debugT := time.Now()
+
+	//Fetch the database
+
+	//Set the filters
+	if os.Getenv("COMPANYID") != "" {
+		scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+	}
 
 	if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
 		scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
@@ -79,6 +85,8 @@ func main() {
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [FETCH] DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	debugT = time.Now()
+
+	//Insert into the new database
 
 	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
 }
