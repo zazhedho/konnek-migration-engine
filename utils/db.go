@@ -5,6 +5,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -40,7 +42,9 @@ func GetDBConnection(host, port, username, dbname, password string) *gorm.DB {
 		//db.DB().SetConnMaxLifetime(time.Second * 60)
 		db.DB().SetConnMaxLifetime(time.Hour)
 		db.SingularTable(true)
-		db.LogMode(true)
+
+		logMode, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("DATABASE_LOGMODE")))
+		db.LogMode(logMode)
 
 		dbInstance = &dbUtils{
 			db: db,
