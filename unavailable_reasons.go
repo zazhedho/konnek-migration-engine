@@ -104,17 +104,16 @@ func main() {
 		m.DeletedAt = list.DeletedAt
 		m.DeletedBy = list.DeletedBy
 
-		reiInsertCount := 0
-	reInsert:
+		//	reiInsertCount := 0
+		//reInsert:
 		if err := dstDB.Create(&m).Error; err != nil {
 			if errCode, ok := err.(*pq.Error); ok {
-				//utils.WriteLog(fmt.Sprintf("%s error creating code: %v", logPrefix, errCode.Code), utils.LogLevelDebug)
 				if errCode.Code == "23505" { //unique_violation
-					reiInsertCount++
-					m.Id = uuid.NewV4()
-					if reiInsertCount < 3 {
-						goto reInsert
-					}
+					//reiInsertCount++
+					//m.Id = uuid.NewV4()
+					//if reiInsertCount < 3 {
+					//	goto reInsert
+					//}
 				}
 			}
 			//TODO: write query insert to file

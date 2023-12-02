@@ -90,7 +90,8 @@ func main() {
 	debugT = time.Now()
 
 	//Insert into the new database
-	//var errorMessages []string
+	var errorMessages []string
+	totalInserted := 0
 	var m models.HistoryChangeUnavailableReason
 	for _, list := range lists {
 		m.Id = list.Id
@@ -106,24 +107,27 @@ func main() {
 		m.UpdatedBy = uuid.Nil
 		m.DeletedBy = uuid.Nil
 
-		reiInsertCount := 0
-	reInsert:
+		//	reiInsertCount := 0
+		//reInsert:
 		if err := dstDB.Create(&m).Error; err != nil {
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
-					reiInsertCount++
-					m.Id = uuid.NewV4()
-					if reiInsertCount < 3 {
-						goto reInsert
-					}
+					//reiInsertCount++
+					//m.Id = uuid.NewV4()
+					//if reiInsertCount < 3 {
+					//	goto reInsert
+					//}
 				}
 			}
 			//TODO: write query insert to file
 			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
-			//errorMessages = append(errorMessages, fmt.Sprintf("error: %s; query: %s", err.Error()))
+			errorMessages = append(errorMessages, fmt.Sprintf("id: %s; error: %s; ", m.Id, err.Error()))
 			continue
 		}
+		totalInserted++
 	}
+	debug++
+	utils.WriteLog(fmt.Sprintf("%s [INSERT] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
 	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
 }
