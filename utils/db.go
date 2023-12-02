@@ -16,9 +16,9 @@ type dbUtils struct {
 }
 
 var dbInstance *dbUtils
-var dbReportInstance *dbUtils
+var dbNewInstance *dbUtils
 var dbOnce sync.Once
-var dbReportOnce sync.Once
+var dbNewOnce sync.Once
 
 func GetDBConnection() *gorm.DB {
 	dbOnce.Do(func() {
@@ -55,7 +55,7 @@ func GetDBConnection() *gorm.DB {
 }
 
 func GetDBNewConnection() *gorm.DB {
-	dbOnce.Do(func() {
+	dbNewOnce.Do(func() {
 		WriteLog("Initialize db connection...", LogLevelInfo)
 		connection := "host=" + os.Getenv("RE_DATABASE_HOST") + " port=" + os.Getenv("RE_DATABASE_PORT") + " user=" + DecryptCred("db-conn", os.Getenv("RE_USERNAME_DB")) + " dbname=" + os.Getenv("RE_DATABASE_NAME") +
 			" password=" + DecryptCred("db-conn", os.Getenv("RE_PASSWORD_DB")) + " sslmode=" + os.Getenv("DATABASE_SSL")
@@ -80,10 +80,10 @@ func GetDBNewConnection() *gorm.DB {
 		logMode, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("DATABASE_LOGMODE")))
 		db.LogMode(logMode)
 
-		dbInstance = &dbUtils{
+		dbNewInstance = &dbUtils{
 			db: db,
 		}
 	})
 
-	return dbInstance.db
+	return dbNewInstance.db
 }
