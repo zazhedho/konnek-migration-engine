@@ -10,4 +10,5 @@ require (
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/lib/pq v1.1.1 // indirect
+	github.com/satori/go.uuid v1.2.0 // indirect
 )
