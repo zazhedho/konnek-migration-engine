@@ -158,6 +158,19 @@ func main() {
 		LEFT JOIN users agent ON agent.id = s.agent_user_id
 		WHERE 1=1
 	`
+	if os.Getenv("COMPANYID") != "" {
+		sqlQuery += fmt.Sprintf(` AND r.company_id = '%s'`, os.Getenv("COMPANYID"))
+	}
+	if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
+		sqlQuery += fmt.Sprintf(` AND r.created_at BETWEEN '%s' AND '%s'`, os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+	} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
+		sqlQuery += fmt.Sprintf(` AND r.created_at >= '%s'`, os.Getenv("START_DATE"))
+	} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
+		sqlQuery += fmt.Sprintf(` AND r.created_at <= '%s'`, os.Getenv("END_DATE"))
+	}
+	if os.Getenv("ROOM_ID") != "" {
+		sqlQuery += fmt.Sprintf(` AND r.id = '%s'`, os.Getenv("ROOM_ID"))
+	}
 	dstDB.Raw(sqlQuery).Scan(&dataRooms)
 
 	totalInsertedMdb := 0
