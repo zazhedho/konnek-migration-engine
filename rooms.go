@@ -52,7 +52,7 @@ func main() {
 	}(conn)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v][room_details]", logID)
+	logPrefix := fmt.Sprintf("[%v][rooms]", logID)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
@@ -172,6 +172,10 @@ func main() {
 		sqlQuery += fmt.Sprintf(` AND r.id = '%s'`, os.Getenv("ROOM_ID"))
 	}
 	dstDB.Raw(sqlQuery).Scan(&dataRooms)
+
+	debug++
+	logPrefix += "[dstDB]"
+	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, len(dataRooms), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
 	totalInsertedMdb := 0
 	errCountMdb := 0
