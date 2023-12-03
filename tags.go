@@ -31,29 +31,29 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v] [Divisions]", logID)
+	logPrefix := fmt.Sprintf("[%v] [Tags]", logID)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
 	debug := 0
 	debugT := time.Now()
 
-	var divisionsSc []models.DivisionExist
+	var tagsSc []models.TagExist
 
 	if os.Getenv("COMPANYID") != "" {
 		scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
 	}
 
 	//Fetch companies existing
-	if err := scDB.Find(&divisionsSc).Error; err != nil {
+	if err := scDB.Find(&tagsSc).Error; err != nil {
 		utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 		return
 	}
 
-	totalDivision := len(divisionsSc)
+	totalTags := len(tagsSc)
 
 	debug++
-	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalDivision, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalTags, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	debugT = time.Now()
 
 	insertedCount := 0
@@ -61,26 +61,26 @@ func main() {
 	errorCount := 0
 	var errorMessages []string
 
-	for _, division := range divisionsSc {
-		var divisionsDst models.DivisionReeng
+	for _, tag := range tagsSc {
+		var tagsDst models.TagReeng
 
-		divisionsDst.Id = division.Id
-		divisionsDst.Name = division.Name
-		divisionsDst.CompanyId = division.CompanyId
-		divisionsDst.CreatedAt = division.CreatedAt
-		divisionsDst.CreatedBy = uuid.Nil
-		divisionsDst.UpdatedAt = division.UpdatedAt
-		divisionsDst.UpdatedBy = uuid.Nil
-		divisionsDst.DeletedAt = division.DeletedAt
+		tagsDst.Id = tag.Id
+		tagsDst.Name = tag.Name
+		tagsDst.CompanyId = tag.CompanyId
+		tagsDst.CreatedAt = tag.CreatedAt
+		tagsDst.CreatedBy = uuid.Nil
+		tagsDst.UpdatedAt = tag.UpdatedAt
+		tagsDst.UpdatedBy = uuid.Nil
+		tagsDst.DeletedAt = tag.DeletedAt
 
 		insertedCount++
 		reiInsertCount := 0
 	reInsert:
-		if err := dstDB.Create(&divisionsDst).Error; err != nil {
+		if err := dstDB.Create(&tagsDst).Error; err != nil {
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
 					reiInsertCount++
-					divisionsDst.Id = uuid.NewV4()
+					tagsDst.Id = uuid.NewV4()
 					if reiInsertCount < 3 {
 						goto reInsert
 					}
@@ -88,7 +88,7 @@ func main() {
 			}
 			utils.WriteLog(fmt.Sprintf("%s; [FAILED] [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
 			errorCount++
-			errorMessages = append(errorMessages, fmt.Sprintf("%s [FAILED] [INSERT] Error: %v ; DATA: %v", time.Now(), err, divisionsDst))
+			errorMessages = append(errorMessages, fmt.Sprintf("%s [FAILED] [INSERT] Error: %v ; DATA: %v", time.Now(), err, tagsDst))
 			continue
 		}
 
