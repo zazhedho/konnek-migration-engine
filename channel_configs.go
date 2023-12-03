@@ -30,7 +30,7 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v] [Companies Configs]", logID)
+	logPrefix := fmt.Sprintf("[%v] [Channel Configs]", logID)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
