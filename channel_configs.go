@@ -51,10 +51,10 @@ func main() {
 		return
 	}
 
-	totalCompany := len(channelConfigSc)
+	totalConfig := len(channelConfigSc)
 
 	debug++
-	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalCompany, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalConfig, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	debugT = time.Now()
 
 	insertedCount := 0

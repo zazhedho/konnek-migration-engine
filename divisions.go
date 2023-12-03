@@ -31,38 +31,29 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v] [Employee Channel]", logID)
+	logPrefix := fmt.Sprintf("[%v] [Divisions]", logID)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
 	debug := 0
 	debugT := time.Now()
 
-	var employeeChannelSc []models.EmployeeChannelExist
-
-	qry := `select ec.id, u.id as user_id, 
-			case when c.name = 'widget' then 'web' else c.name end as name,
-			u.company_id, ec.created_at, ec.updated_at 
-			from employee_channels ec 
-			join employees e on ec.employee_id = e.id 
-			join users u on e.user_id = u.id 
-			join channels c on ec.channel_id = c.id 
-			where 1=1 and ec.deleted_at is null`
+	var divisionsSc []models.DivisionExist
 
 	if os.Getenv("COMPANYID") != "" {
-		qry += fmt.Sprintf(" AND u.company_id = '%v'", os.Getenv("COMPANYID"))
+		scDB = scDB.Where("company_id = ? AND id = '1ff464e6-da89-42c7-9ff1-6c0cdf644f4c'", os.Getenv("COMPANYID"))
 	}
 
 	//Fetch companies existing
-	if err := scDB.Raw(qry).Scan(&employeeChannelSc).Error; err != nil {
+	if err := scDB.Find(&divisionsSc).Error; err != nil {
 		utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 		return
 	}
 
-	totalEmpChannel := len(employeeChannelSc)
+	totalCompany := len(divisionsSc)
 
 	debug++
-	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalEmpChannel, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalCompany, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	debugT = time.Now()
 
 	insertedCount := 0
@@ -70,25 +61,26 @@ func main() {
 	errorCount := 0
 	var errorMessages []string
 
-	for _, employeeChannel := range employeeChannelSc {
-		var employeeChannelDst models.EmployeeChannelReeng
-		employeeChannelDst.Id = employeeChannel.Id
-		employeeChannelDst.UserId = employeeChannel.UserID
-		employeeChannelDst.ChannelCode = employeeChannel.ChannelName
-		employeeChannelDst.CompanyId = employeeChannel.CompanyID
-		employeeChannelDst.CreatedAt = employeeChannel.CreatedAt
-		employeeChannelDst.CreatedBy = uuid.Nil
-		employeeChannelDst.UpdatedAt = employeeChannel.UpdatedAt
-		employeeChannelDst.UpdatedBy = uuid.Nil
+	for _, division := range divisionsSc {
+		var divisionsDst models.DivisionReeng
+
+		divisionsDst.Id = division.Id
+		divisionsDst.Name = division.Name
+		divisionsDst.CompanyId = division.CompanyId
+		divisionsDst.CreatedAt = division.CreatedAt
+		divisionsDst.CreatedBy = uuid.Nil
+		divisionsDst.UpdatedAt = division.UpdatedAt
+		divisionsDst.UpdatedBy = uuid.Nil
+		divisionsDst.DeletedAt = division.DeletedAt
 
 		insertedCount++
 		reiInsertCount := 0
 	reInsert:
-		if err := dstDB.Create(&employeeChannelDst).Error; err != nil {
+		if err := dstDB.Create(&divisionsDst).Error; err != nil {
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
 					reiInsertCount++
-					employeeChannelDst.Id = uuid.NewV4()
+					divisionsDst.Id = uuid.NewV4()
 					if reiInsertCount < 3 {
 						goto reInsert
 					}
@@ -96,7 +88,7 @@ func main() {
 			}
 			utils.WriteLog(fmt.Sprintf("%s; [FAILED] [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
 			errorCount++
-			errorMessages = append(errorMessages, fmt.Sprintf("%s [FAILED ][INSERT] Error: %v ; DATA: %v", time.Now(), err, employeeChannelDst))
+			errorMessages = append(errorMessages, fmt.Sprintf("%s [FAILED] [INSERT] Error: %v ; DATA: %v", time.Now(), err, divisionsDst))
 			continue
 		}
 
@@ -105,7 +97,7 @@ func main() {
 
 	// Write error messages to a text file
 	formattedTime := time.Now().Format("2006-01-02_150405")
-	errorFileLog := fmt.Sprintf("error_messages_employee_channels_%s.log", formattedTime)
+	errorFileLog := fmt.Sprintf("error_messages_companies_%s.log", formattedTime)
 	if len(errorMessages) > 0 {
 		createFile, errCreate := os.Create(errorFileLog)
 		if errCreate != nil {

@@ -50,10 +50,10 @@ func main() {
 		return
 	}
 
-	totalCompany := len(comConfSc)
+	totalConfigs := len(comConfSc)
 
 	debug++
-	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalCompany, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalConfigs, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	debugT = time.Now()
 
 	insertedCount := 0
