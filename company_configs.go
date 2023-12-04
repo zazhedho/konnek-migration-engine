@@ -6,7 +6,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"konnek-migration/models"
 	"konnek-migration/utils"
-	"log"
 	"os"
 	"time"
 )
@@ -59,56 +58,85 @@ func main() {
 	insertedCount := 0
 	successCount := 0
 	errorCount := 0
-	log.Printf("DATA COMPANY CONFIG : %v", comConfSc)
-	//var errorMessages []string
 
-	//for _, comConf := range comConfSc {
-	//	var comConfDst models.CompanyConfig
-	//
-	//
-	//
-	//	insertedCount++
-	//	reiInsertCount := 0
-	//reInsert:
-	//	if err := dstDB.Create(&comConfDst).Error; err != nil {
-	//		if errCode, ok := err.(*pq.Error); ok {
-	//			if errCode.Code == "23505" { //unique_violation
-	//				reiInsertCount++
-	//				comConfDst.Id = uuid.NewV4()
-	//				if reiInsertCount < 3 {
-	//					goto reInsert
-	//				}
-	//			}
-	//		}
-	//		utils.WriteLog(fmt.Sprintf("%s; [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
-	//		errorCount++
-	//		errorMessages = append(errorMessages, fmt.Sprintf("%s [INSERT] Error: %v ; DATA: %v", time.Now(), err, comConfDst))
-	//		continue
-	//	}
-	//
-	//	successCount++
-	//}
-	//
-	//// Write error messages to a text file
-	//formattedTime := time.Now().Format("2006-01-02_150405")
-	//errorFileLog := fmt.Sprintf("error_messages_companies_%s.log", formattedTime)
-	//if len(errorMessages) > 0 {
-	//	createFile, errCreate := os.Create(errorFileLog)
-	//	if errCreate != nil {
-	//		utils.WriteLog(fmt.Sprintf("%s [ERROR] Create File Error Log; Error: %v;", logPrefix, errCreate), utils.LogLevelError)
-	//		return
-	//	}
-	//	defer createFile.Close()
-	//
-	//	for _, errMsg := range errorMessages {
-	//		_, errWrite := createFile.WriteString(errMsg + "\n")
-	//		if errWrite != nil {
-	//			utils.WriteLog(fmt.Sprintf("%s [ERROR] Write File Error Log; Filename: %s; Error: %v;", logPrefix, errorFileLog, errCreate), utils.LogLevelError)
-	//		}
-	//	}
-	//
-	//	utils.WriteLog(fmt.Sprintf("%s [ERROR] Error messages written to %s", logPrefix, errorFileLog), utils.LogLevelError)
-	//}
+	var errorMessages []string
+
+	for _, comConf := range comConfSc {
+		var comConfDst models.CompanyConfig
+
+		comConfDst.Id = comConf.Id
+		comConfDst.CompanyId = comConf.CompanyId
+		comConfDst.Bot = comConf.Bot
+		comConfDst.Whatsapp = comConf.Whatsapp
+		comConfDst.Line = comConf.Line
+		comConfDst.Facebook = comConf.FacebookMessenger
+		comConfDst.WebWidget = comConf.Widget
+		comConfDst.AutoAssign = comConf.AutoAssign
+		comConfDst.ChatLimit = comConf.ChatLimit
+		comConfDst.SlaFrom = comConf.SlaFrom
+		comConfDst.SlaTo = comConf.SlaTo
+		comConfDst.SlaThreshold = comConf.SlaThreshold
+		comConfDst.WelcomeGreeting = comConf.Greeting
+		comConfDst.WelcomeGreetingFlag = comConf.FlagGreeting
+		comConfDst.WelcomeGreetingOption = comConf.GreetingOptions
+		comConfDst.WelcomeGreetingOptionFlag = comConf.GreetingOptionsFlag
+		comConfDst.WaitingGreeting = comConf.WaitingGreeting
+		comConfDst.WaitingGreetingFlag = comConf.WaitingGreetingFlag
+		comConfDst.AssignedGreeting = comConf.AssignedGreeting
+		comConfDst.AssignedGreetingFlag = comConf.AssignedGreetingFlag
+		comConfDst.ClosingGreeting = comConf.ClosingGreeting
+		comConfDst.ClosingGreetingFlag = comConf.ClosingGreetingFlag
+		comConfDst.CsatFlag = comConf.CsatFlag
+		comConfDst.UnavailableReasonFlag = comConf.ReasonFlag
+		comConfDst.CreatedAt = comConf.CreatedAt
+		comConfDst.CreatedBy = uuid.Nil
+		comConfDst.UpdatedAt = comConf.UpdatedAt
+		comConfDst.UpdatedBy = uuid.Nil
+		comConfDst.DeletedAt = comConf.DeletedAt
+		comConfDst.DeletedBy = uuid.Nil
+
+		insertedCount++
+		//	reiInsertCount := 0
+		//reInsert:
+		if err := dstDB.Create(&comConfDst).Error; err != nil {
+			//		if errCode, ok := err.(*pq.Error); ok {
+			//			if errCode.Code == "23505" { //unique_violation
+			//				reiInsertCount++
+			//				comConfDst.Id = uuid.NewV4()
+			//				if reiInsertCount < 3 {
+			//					goto reInsert
+			//				}
+			//			}
+			//		}
+			utils.WriteLog(fmt.Sprintf("%s; [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
+			errorCount++
+			errorMessages = append(errorMessages, fmt.Sprintf("%s [INSERT] Error: %v ; DATA: %v", time.Now(), err, comConfDst))
+			continue
+		}
+
+		successCount++
+	}
+
+	// Write error messages to a text file
+	formattedTime := time.Now().Format("2006-01-02_150405")
+	errorFileLog := fmt.Sprintf("error_messages_companies_%s.log", formattedTime)
+	if len(errorMessages) > 0 {
+		createFile, errCreate := os.Create(errorFileLog)
+		if errCreate != nil {
+			utils.WriteLog(fmt.Sprintf("%s [ERROR] Create File Error Log; Error: %v;", logPrefix, errCreate), utils.LogLevelError)
+			return
+		}
+		defer createFile.Close()
+
+		for _, errMsg := range errorMessages {
+			_, errWrite := createFile.WriteString(errMsg + "\n")
+			if errWrite != nil {
+				utils.WriteLog(fmt.Sprintf("%s [ERROR] Write File Error Log; Filename: %s; Error: %v;", logPrefix, errorFileLog, errCreate), utils.LogLevelError)
+			}
+		}
+
+		utils.WriteLog(fmt.Sprintf("%s [ERROR] Error messages written to %s", logPrefix, errorFileLog), utils.LogLevelError)
+	}
 
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [INSERT] TOTAL_INSERTED: %d; TOTAL_SUCCESS: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, insertedCount, successCount, errorCount, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)

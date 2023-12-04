@@ -19,6 +19,7 @@ type Configuration struct {
 	Line                 bool       `json:"line" gorm:"column:line"`
 	AutoAssign           bool       `json:"auto_assign" gorm:"column:auto_assign"`
 	Telegram             bool       `json:"telegram" gorm:"column:telegram"`
+	Widget               bool       `json:"widget" gorm:"column:widget"`
 	FacebookMessenger    bool       `json:"facebook_messenger" gorm:"column:facebook_messenger"`
 	FlagGreeting         bool       `json:"flag_greeting" gorm:"column:flag_greeting"`
 	Greeting             string     `json:"greeting" gorm:"column:greeting"`
