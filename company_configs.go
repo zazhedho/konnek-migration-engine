@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"konnek-migration/models"
+	"konnek-migration/sdk"
 	"konnek-migration/utils"
 	"os"
 	"time"
@@ -40,7 +41,7 @@ func main() {
 	var comConfSc []models.Configuration
 
 	if os.Getenv("COMPANYID") != "" {
-		scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+		scDB = scDB.Where("company_id = ? ", os.Getenv("COMPANYID"))
 	}
 
 	//Fetch companies existing
@@ -69,6 +70,7 @@ func main() {
 		comConfDst.Bot = comConf.Bot
 		comConfDst.Whatsapp = comConf.Whatsapp
 		comConfDst.Line = comConf.Line
+		comConfDst.Telegram = comConf.Telegram
 		comConfDst.Facebook = comConf.FacebookMessenger
 		comConfDst.WebWidget = comConf.Widget
 		comConfDst.AutoAssign = comConf.AutoAssign
@@ -94,6 +96,35 @@ func main() {
 		comConfDst.UpdatedBy = uuid.Nil
 		comConfDst.DeletedAt = comConf.DeletedAt
 		comConfDst.DeletedBy = uuid.Nil
+
+		switch comConf.SdkWhatsapp {
+		case sdk.SdkWAKataAiEx:
+			comConfDst.SdkWhatsapp = sdk.SdkWhatsappKataAi
+		case sdk.SdkWABotikaEx:
+			comConfDst.SdkWhatsapp = sdk.SdkWhatsappBotika
+		case sdk.SdkWAMetaEx:
+			comConfDst.SdkWhatsapp = sdk.SdkWhatsappMeta
+		default:
+			comConfDst.SdkWhatsapp = sdk.SdkWhatsappMeta
+		}
+
+		comConfDst.SdkTelegram = sdk.SdkTelegram
+		comConfDst.SdkLine = sdk.SdkLine
+		comConfDst.SdkFacebook = sdk.SdkFacebook
+		comConfDst.SdkBot = sdk.SdkBotKataAi
+		comConfDst.Blacklist = comConf.BlackList
+		comConfDst.InquirySandeza = comConf.InquirySandeza
+		comConfDst.KeywordFilterStatus = comConf.KeywordFilterStatus
+		comConfDst.KeywordFilter = comConf.KeywordFilter
+		comConfDst.KeywordGreetings = comConf.KeywordGreetings
+		comConfDst.MaintenanceStatus = comConf.MaintenanceStatus
+		comConfDst.MaintenanceMessage = comConf.MaintenanceMessage
+		comConfDst.KeywordMaxInvalid = comConf.KeywordGreetingsLimit
+
+		KeyInterval := comConf.KeywordGreetingsLimitDuration / 60
+
+		comConfDst.KeywordInterval = KeyInterval
+		comConfDst.KeywordBlockDuration = comConf.KeywordGreetingsLimitDuration
 
 		insertedCount++
 		//	reiInsertCount := 0

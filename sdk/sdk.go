@@ -11,4 +11,7 @@ const (
 	SdkSprint         = "sprint"
 	SdkWhatsappDummy  = "whatsapp-dummy"
 	SdkBotDummy       = "bot-dummy"
+	SdkWAKataAiEx     = "kata-ai-whatsapp-sdk"
+	SdkWAMetaEx       = "meta-whatsapp-sdk"
+	SdkWABotikaEx     = "botika-whatsapp-sdk"
 )

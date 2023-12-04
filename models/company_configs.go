@@ -10,41 +10,46 @@ func (Configuration) TableName() string {
 }
 
 type Configuration struct {
-	Id                   uuid.UUID  `json:"id" gorm:"column:id"`
-	ChatLimit            int        `json:"limit_chat" gorm:"column:limit_chat"`
-	SetLimitChat         bool       `json:"set_limit_chat" gorm:"column:set_limit_chat"`
-	CompanyId            uuid.UUID  `json:"company_id" gorm:"column:company_id"`
-	Bot                  bool       `json:"bot" gorm:"column:bot"`
-	Whatsapp             bool       `json:"whatsapp" gorm:"column:whatsapp"`
-	Line                 bool       `json:"line" gorm:"column:line"`
-	AutoAssign           bool       `json:"auto_assign" gorm:"column:auto_assign"`
-	Telegram             bool       `json:"telegram" gorm:"column:telegram"`
-	Widget               bool       `json:"widget" gorm:"column:widget"`
-	FacebookMessenger    bool       `json:"facebook_messenger" gorm:"column:facebook_messenger"`
-	FlagGreeting         bool       `json:"flag_greeting" gorm:"column:flag_greeting"`
-	Greeting             string     `json:"greeting" gorm:"column:greeting"`
-	GreetingOptionsFlag  bool       `json:"greeting_options_flag" gorm:"column:greeting_options_flag"`
-	GreetingOptions      string     `json:"greeting_options" gorm:"column:greeting_options"`
-	WaitingGreetingFlag  bool       `json:"waiting_greeting_flag" gorm:"column:waiting_greeting_flag"`
-	WaitingGreeting      string     `json:"waiting_greeting" gorm:"column:waiting_greeting"`
-	AssignedGreetingFlag bool       `json:"assigned_greeting_flag" gorm:"column:assigned_greeting_flag"`
-	AssignedGreeting     string     `json:"assigned_greeting" gorm:"column:assigned_greeting"`
-	ClosingGreetingFlag  bool       `json:"closing_greeting_flag" gorm:"column:closing_greeting_flag"`
-	ClosingGreeting      string     `json:"closing_greeting" gorm:"column:closing_greeting"`
-	SlaFrom              string     `json:"sla_from" gorm:"column:sla_from"`
-	SlaTo                string     `json:"sla_to" gorm:"column:sla_to"`
-	SlaThreshold         int        `json:"sla_threshold" gorm:"column:sla_threshold"`
-	CreatedAt            time.Time  `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt            time.Time  `json:"updated_at" gorm:"column:updated_at"`
-	DeletedAt            *time.Time `json:"-" gorm:"column:deleted_at"`
-	CsatFlag             bool       `json:"csat_flag" gorm:"column:csat_flag"`
-	ReasonFlag           bool       `json:"reason_flag" gorm:"column:reason_flag"`
-	KeywordFilterStatus  bool       `json:"keyword_filter_status" gorm:"column:keyword_filter_status"`
-	KeywordFilter        string     `json:"keyword_filter" gorm:"column:keyword_filter"`
-	KeywordGreetings     string     `json:"keyword_greetings" gorm:"column:keyword_greetings"`
-	UrlWebhook           string     `json:"url_webhook" gorm:"column:url_webhook"`
-	SdkWhatsapp          string     `json:"sdk_whatsapp" gorm:"sdk_whatsapp"`
-	InquirySandeza       bool       `json:"inquiry_sandeza" gorm:"inquiry_sandeza"`
+	Id                            uuid.UUID  `json:"id" gorm:"column:id"`
+	ChatLimit                     int        `json:"limit_chat" gorm:"column:limit_chat"`
+	SetLimitChat                  bool       `json:"set_limit_chat" gorm:"column:set_limit_chat"`
+	CompanyId                     uuid.UUID  `json:"company_id" gorm:"column:company_id"`
+	Bot                           bool       `json:"bot" gorm:"column:bot"`
+	Whatsapp                      bool       `json:"whatsapp" gorm:"column:whatsapp"`
+	Line                          bool       `json:"line" gorm:"column:line"`
+	AutoAssign                    bool       `json:"auto_assign" gorm:"column:auto_assign"`
+	Telegram                      bool       `json:"telegram" gorm:"column:telegram"`
+	Widget                        bool       `json:"widget" gorm:"column:widget"`
+	FacebookMessenger             bool       `json:"facebook_messenger" gorm:"column:facebook_messenger"`
+	FlagGreeting                  bool       `json:"flag_greeting" gorm:"column:flag_greeting"`
+	Greeting                      string     `json:"greeting" gorm:"column:greeting"`
+	GreetingOptionsFlag           bool       `json:"greeting_options_flag" gorm:"column:greeting_options_flag"`
+	GreetingOptions               string     `json:"greeting_options" gorm:"column:greeting_options"`
+	WaitingGreetingFlag           bool       `json:"waiting_greeting_flag" gorm:"column:waiting_greeting_flag"`
+	WaitingGreeting               string     `json:"waiting_greeting" gorm:"column:waiting_greeting"`
+	AssignedGreetingFlag          bool       `json:"assigned_greeting_flag" gorm:"column:assigned_greeting_flag"`
+	AssignedGreeting              string     `json:"assigned_greeting" gorm:"column:assigned_greeting"`
+	ClosingGreetingFlag           bool       `json:"closing_greeting_flag" gorm:"column:closing_greeting_flag"`
+	ClosingGreeting               string     `json:"closing_greeting" gorm:"column:closing_greeting"`
+	SlaFrom                       string     `json:"sla_from" gorm:"column:sla_from"`
+	SlaTo                         string     `json:"sla_to" gorm:"column:sla_to"`
+	SlaThreshold                  int        `json:"sla_threshold" gorm:"column:sla_threshold"`
+	CreatedAt                     time.Time  `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt                     time.Time  `json:"updated_at" gorm:"column:updated_at"`
+	DeletedAt                     *time.Time `json:"-" gorm:"column:deleted_at"`
+	CsatFlag                      bool       `json:"csat_flag" gorm:"column:csat_flag"`
+	ReasonFlag                    bool       `json:"reason_flag" gorm:"column:reason_flag"`
+	BlackList                     string     `json:"blacklist" gorm:"column:blacklist"`
+	KeywordFilterStatus           bool       `json:"keyword_filter_status" gorm:"column:keyword_filter_status"`
+	KeywordFilter                 string     `json:"keyword_filter" gorm:"column:keyword_filter"`
+	KeywordGreetings              string     `json:"keyword_greetings" gorm:"column:keyword_greetings"`
+	UrlWebhook                    string     `json:"url_webhook" gorm:"column:url_webhook"`
+	SdkWhatsapp                   string     `json:"sdk_whatsapp" gorm:"column:sdk_whatsapp"`
+	InquirySandeza                bool       `json:"inquiry_sandeza" gorm:"column:inquiry_sandeza"`
+	MaintenanceStatus             bool       `json:"maintenance_status" gorm:"column:maintenance_status"`
+	MaintenanceMessage            string     `json:"maintenance_message" gorm:"column:maintenance_message"`
+	KeywordGreetingsLimit         int        `json:"keyword_greetings_limit" gorm:"column:keyword_greetings_limit"`
+	KeywordGreetingsLimitDuration int        `json:"keyword_greetings_limit_duration" gorm:"column:keyword_greetings_limit_duration"`
 }
 
 func (CompanyConfig) TableName() string {
@@ -96,7 +101,7 @@ type CompanyConfig struct {
 	SpamBlockDuration         int        `json:"spam_block_duration" gorm:"column:spam_block_duration"` //in minutes
 	SpamPerContentType        bool       `json:"spam_per_content_type" gorm:"column:spam_per_content_type"`
 	SpamMessage               string     `json:"spam_message" gorm:"column:spam_message"`
-	KeywordMaxInvalid         int64      `json:"keyword_max_invalid" gorm:"column:keyword_max_invalid"`
+	KeywordMaxInvalid         int        `json:"keyword_max_invalid" gorm:"column:keyword_max_invalid"`
 	KeywordInterval           int        `json:"keyword_interval" gorm:"column:keyword_interval"`             //in seconds
 	KeywordBlockDuration      int        `json:"keyword_block_duration" gorm:"column:keyword_block_duration"` //in minutes
 	CreatedAt                 time.Time  `json:"created_at" gorm:"column:created_at"`
