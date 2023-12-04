@@ -105,6 +105,8 @@ func main() {
 		} else if list.Name == models.RoleAdmin {
 			isAdmin = true
 			urlAfterLogin = "/channel"
+		} else if list.Name == models.RoleAdminKonnek || list.Name == models.RoleBot || list.Name == models.RoleCustomer {
+			urlAfterLogin = ""
 		}
 
 		menuAccess := ""
@@ -114,7 +116,6 @@ func main() {
 
 		var m models.Roles
 		m.Id = list.Id
-		m.CompanyId = companyId
 		m.Name = list.Name
 		m.IsAgent = isAgent
 		m.IsAdmin = isAdmin
@@ -127,6 +128,10 @@ func main() {
 		m.UpdatedBy = uuid.Nil
 		m.DeletedAt = list.DeletedAt
 		m.DeletedBy = uuid.Nil
+
+		if list.Name != models.RoleAdminKonnek {
+			m.CompanyId = companyId
+		}
 
 		//	reiInsertCount := 0
 		//reInsert:

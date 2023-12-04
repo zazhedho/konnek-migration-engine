@@ -11,7 +11,7 @@ func (Roles) TableName() string {
 
 type Roles struct {
 	Id            uuid.UUID   `json:"id" gorm:"column:id"`
-	CompanyId     uuid.UUID   `json:"company_id" gorm:"column:company_id"`
+	CompanyId     interface{} `json:"company_id" gorm:"column:company_id"`
 	Name          string      `json:"name" gorm:"column:name"`
 	IsAgent       bool        `json:"is_agent" gorm:"column:is_agent"`
 	IsAdmin       bool        `json:"is_admin" gorm:"column:is_admin"`
