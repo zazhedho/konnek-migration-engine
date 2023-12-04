@@ -96,13 +96,13 @@ func main() {
 	for _, dataSession := range dataSessions {
 		status := 0
 		if dataSession.QueTime.IsZero() {
-			status = 0
+			status = 0 //Open
 		} else if !dataSession.QueTime.IsZero() && dataSession.AgentUserId == uuid.Nil {
-			status = 1
+			status = 1 //Waiting
 		} else if dataSession.AgentUserId != uuid.Nil && !dataSession.AssignTime.IsZero() {
-			status = 2
+			status = 2 //Assigned
 		} else if !dataSession.CloseTime.IsZero() {
-			status = -1
+			status = -1 //Closed
 		}
 
 		mSessions := models.Sessions{
