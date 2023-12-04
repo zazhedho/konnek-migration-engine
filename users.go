@@ -134,11 +134,16 @@ func main() {
 			divisionId = list.Employee.DivisionId
 		}
 
+		userType := ""
+		if _, ok := models.UserTypeMap[list.Roles.Name]; ok {
+			userType = strconv.Itoa(models.UserTypeMap[list.Roles.Name])
+		}
+
 		var m models.Users
 		m.Id = list.Id
 		m.CompanyId = list.CompanyId
 		m.RolesId = rolesId
-		m.Type = strconv.Itoa(models.UserTypeMap[list.Roles.Name])
+		m.Type = userType
 		m.CustomerChannel = customerChannel
 		m.Username = list.Username
 		m.Password = list.Password
