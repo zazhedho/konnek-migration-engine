@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
 	"konnek-migration/models"
 	"konnek-migration/utils"
@@ -75,18 +74,18 @@ func main() {
 		chatTemplDst.DeletedAt = chatTemplate.DeletedAt
 
 		insertedCount++
-		reiInsertCount := 0
-	reInsert:
+		//reiInsertCount := 0
+		//reInsert:
 		if err := dstDB.Create(&chatTemplDst).Error; err != nil {
-			if errCode, ok := err.(*pq.Error); ok {
-				if errCode.Code == "23505" { //unique_violation
-					reiInsertCount++
-					chatTemplDst.Id = uuid.NewV4()
-					if reiInsertCount < 3 {
-						goto reInsert
-					}
-				}
-			}
+			//if errCode, ok := err.(*pq.Error); ok {
+			//	if errCode.Code == "23505" { //unique_violation
+			//		reiInsertCount++
+			//		chatTemplDst.Id = uuid.NewV4()
+			//		if reiInsertCount < 3 {
+			//			goto reInsert
+			//		}
+			//	}
+			//}
 			utils.WriteLog(fmt.Sprintf("%s; [FAILED] [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
 			errorCount++
 			errorMessages = append(errorMessages, fmt.Sprintf("%s [FAILED] [INSERT] Error: %v ; DATA: %v", time.Now(), err, chatTemplDst))
