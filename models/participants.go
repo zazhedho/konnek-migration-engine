@@ -20,4 +20,5 @@ type Participants struct {
 	UpdatedBy uuid.UUID  `gorm:"column:updated_by" json:"updated_by"`
 	DeletedAt *time.Time `gorm:"column:deleted_at" json:"-"`
 	DeletedBy uuid.UUID  `gorm:"column:deleted_by" json:"deleted_by"`
+	Error     string     `json:"error" gorm:"-"`
 }
