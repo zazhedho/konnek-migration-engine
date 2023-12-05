@@ -50,7 +50,7 @@ func WriteLog(msg string, level int) {
 	}
 
 	// Membuat file log
-	logFile, err := os.OpenFile("log/"+fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("log/"+fileName+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
