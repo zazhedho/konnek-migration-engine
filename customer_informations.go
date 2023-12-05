@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/joho/godotenv/autoload"
@@ -34,7 +35,11 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v] [customer_informations]", logID)
+	appName := "customer_informations"
+	if os.Getenv("APP_NAME") != "" {
+		appName = os.Getenv("APP_NAME")
+	}
+	logPrefix := fmt.Sprintf("[%v] [%s]", logID, appName)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
@@ -113,6 +118,7 @@ func main() {
 		m.DeletedBy = uuid.Nil
 
 		if err := dstDB.Create(&m).Error; err != nil {
+			list.Error = err.Error()
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
 					errorDuplicates = append(errorDuplicates, list)
@@ -127,6 +133,22 @@ func main() {
 	}
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [INSERT] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+
+	//write error to file
+	if len(errorMessages) > 0 {
+		filename := fmt.Sprintf("%s_%s", appName, time.Now().Format("2006_01_02"))
+		for _, errMsg := range errorMessages {
+			content, _ := json.Marshal(errMsg)
+			utils.WriteErrorMap(filename, string(content))
+		}
+	}
+	if len(errorDuplicates) > 0 {
+		filename := fmt.Sprintf("%s_%s_duplicate", appName, time.Now().Format("2006_01_02"))
+		for _, errMsg := range errorDuplicates {
+			content, _ := json.Marshal(errMsg)
+			utils.WriteErrorMap(filename, string(content))
+		}
+	}
 
 	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
 }
