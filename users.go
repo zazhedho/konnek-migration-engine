@@ -183,6 +183,7 @@ func main() {
 		m.CustomerChannel = customerChannel
 		m.Username = list.Username
 		m.Password = list.Password
+		m.LastChangePwd = &list.CreatedAt
 		m.Status = 1
 		m.OnlineStatus = list.OnlineStatus
 		m.LoginTime = list.LoginTime
