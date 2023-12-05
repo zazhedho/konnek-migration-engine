@@ -40,8 +40,9 @@ type User struct {
 	UpdatedAt    time.Time  `json:"updated_at" gorm:"column:updated_at"`
 	DeletedAt    *time.Time `json:"-" gorm:"column:deleted_at"`
 	OnlineStatus int        `json:"-" gorm:"column:online_status"`
-	LoginTime    time.Time  `json:"login_time" gorm:"login_time"`
+	LoginTime    *time.Time `json:"login_time" gorm:"login_time"`
 	NotifSound   bool       `json:"notification_sound" gorm:"column:notification_sound"`
+	Error        string     `json:"error" gorm:"-"`
 }
 
 func (Customer) TableName() string {
