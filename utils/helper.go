@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -75,14 +76,19 @@ func WriteLog(msg string, level int) {
 
 }
 
-func WriteErrorMap(filename string, msg string) {
-	filename += ".err.log"
-	logFile, err := os.OpenFile("log/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+func WriteErrorMap(filename string, msg interface{}) {
+	filename += ".json"
+	jsonFile, err := os.OpenFile("data/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer logFile.Close()
-	_, err = logFile.WriteString(msg + "\n")
+	defer jsonFile.Close()
+	//_, err = jsonFile.WriteString(msg + "\n")
+	//if err != nil {
+	//	WriteLog(fmt.Sprintf("failed write to %s; error: %v", filename, err), LogLevelError)
+	//}
+	encoder := json.NewEncoder(jsonFile)
+	err = encoder.Encode(msg)
 	if err != nil {
 		WriteLog(fmt.Sprintf("failed write to %s; error: %v", filename, err), LogLevelError)
 	}
