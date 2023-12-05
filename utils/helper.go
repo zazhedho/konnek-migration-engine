@@ -46,7 +46,7 @@ func WriteLog(msg string, level int) {
 
 	fileName := "konnek_migration_" + time.Now().Format("2006_01_02")
 	if os.Getenv("APP_NAME") != "" {
-		fileName = os.Getenv("APP_NAME") + time.Now().Format("2006_01_02")
+		fileName = os.Getenv("APP_NAME") + "_" + time.Now().Format("2006_01_02")
 	}
 
 	// Membuat file log
