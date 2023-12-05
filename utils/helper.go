@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -45,18 +44,32 @@ func WriteLog(msg string, level int) {
 	logTime := time.Now().Format("2006/01/02 15:04:05.000000")
 	logMcs := time.Now().Format(".000000")
 
+	fileName := "konnek_migration_" + time.Now().Format("2006_01_02")
+	if os.Getenv("APP_NAME") != "" {
+		fileName = os.Getenv("APP_NAME") + time.Now().Format("2006_01_02")
+	}
+
+	// Membuat file log
+	logFile, err := os.OpenFile("log/"+fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	switch level {
 	case LogLevelPanic:
 		log.Printf("%s [%s][PANIC]%s\n\n", logMcs, GetMyIP(), msg)
 	case LogLevelError:
 		log.Printf("%s [%s][ERROR]%s\n\n", logMcs, GetMyIP(), msg)
 	case LogLevelFail:
-		fmt.Printf("%s [%s][FAIL ]%s\n\n", logTime, GetMyIP(), msg)
+		log.Printf("%s [%s][FAIL ]%s\n\n", logTime, GetMyIP(), msg)
 	case LogLevelInfo:
-		fmt.Printf("%s [%s][INFO ]%s\n\n", logTime, GetMyIP(), msg)
+		log.Printf("%s [%s][INFO ]%s\n\n", logTime, GetMyIP(), msg)
 	case LogLevelData:
-		fmt.Printf("%s [%s][DATA ]%s\n\n", logTime, GetMyIP(), msg)
+		log.Printf("%s [%s][DATA ]%s\n\n", logTime, GetMyIP(), msg)
 	case LogLevelDebug:
-		fmt.Printf("%s [%s][DEBUG]%s\n\n", logTime, GetMyIP(), msg)
+		log.Printf("%s [%s][DEBUG]%s\n\n", logTime, GetMyIP(), msg)
 	}
+
 }
