@@ -149,6 +149,7 @@ func main() {
 		m.DeletedBy = uuid.Nil
 
 		if err := dstDB.Create(&m).Error; err != nil {
+			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
 			list.Error = err.Error()
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
@@ -156,7 +157,6 @@ func main() {
 					continue
 				}
 			}
-			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
 			errorMessages = append(errorMessages, list)
 			continue
 		}
@@ -168,18 +168,10 @@ func main() {
 	//write error to file
 	if len(errorMessages) > 0 {
 		filename := fmt.Sprintf("%s_%s_%s", appName, time.Now().Format("2006_01_02"), time.Now().Unix())
-		//for _, errMsg := range errorMessages {
-		//	content, _ := json.Marshal(errMsg)
-		//	utils.WriteErrorMap(filename, string(content))
-		//}
 		utils.WriteErrorMap(filename, errorMessages)
 	}
 	if len(errorDuplicates) > 0 {
 		filename := fmt.Sprintf("%s_%s_%v_duplicate", appName, time.Now().Format("2006_01_02"), time.Now().Unix())
-		//for _, errMsg := range errorDuplicates {
-		//	content, _ := json.Marshal(errMsg)
-		//	utils.WriteErrorMap(filename, string(content))
-		//}
 		utils.WriteErrorMap(filename, errorDuplicates)
 	}
 
