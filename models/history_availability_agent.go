@@ -23,4 +23,5 @@ type HistoryAvailabilityAgent struct {
 	MasterId        uuid.UUID `json:"master_id" gorm:"column:master_id"`
 	CreatedAt       time.Time `json:"created_at" gorm:"column:created_at"`
 	CreatedBy       uuid.UUID `json:"created_by" gorm:"column:created_by"`
+	Error           string    `json:"error" gorm:"-"`
 }
