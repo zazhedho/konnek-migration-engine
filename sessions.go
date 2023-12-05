@@ -113,7 +113,7 @@ func main() {
 			LastMessageId:     dataSession.ChatMessage.Id, //query ke table chat_messages
 			Categories:        dataSession.Categories,
 			BotStatus:         dataSession.BotStatus,
-			Status:            status, //query status dari room_details existing
+			Status:            status,
 			OpenBy:            dataSession.OpenBy,
 			HandoverBy:        dataSession.HandOverBy,
 			CloseBy:           dataSession.CloseBy,
