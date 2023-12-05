@@ -77,7 +77,7 @@ func WriteLog(msg string, level int) {
 
 func WriteErrorMap(filename string, msg string) {
 	filename += ".err.log"
-	logFile, err := os.OpenFile("log/"+filename+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("log/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
