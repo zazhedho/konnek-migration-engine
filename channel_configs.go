@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
 	"konnek-migration/models"
 	"konnek-migration/utils"
@@ -30,7 +32,11 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v] [Channel Configs]", logID)
+	appName := "channel_configs"
+	if os.Getenv("APP_NAME") != "" {
+		appName = os.Getenv("APP_NAME")
+	}
+	logPrefix := fmt.Sprintf("[%v] [%s]", logID, appName)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
@@ -43,6 +49,10 @@ func main() {
 
 	if os.Getenv("COMPANYID") != "" {
 		scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+	}
+
+	if os.Getenv("CHANNELID") != "" {
+		scDB = scDB.Where("channel_id = ?", os.Getenv("CHANNELID"))
 	}
 
 	//Fetch companies existing
@@ -61,7 +71,8 @@ func main() {
 	successCount := 0
 	errorCount := 0
 
-	var errorMessages []string
+	var errorMessages []models.ChannelConfigExist
+	var errorDuplicates []models.ChannelConfigExist
 
 	for _, channelConfig := range channelConfigSc {
 		var channelConfigDst models.ChannelConfigReeng
@@ -88,47 +99,41 @@ func main() {
 		//	reiInsertCount := 0
 		//reInsert:
 		if err := dstDB.Create(&channelConfigDst).Error; err != nil {
-			//	if errCode, ok := err.(*pq.Error); ok {
-			//		if errCode.Code == "23505" { //unique_violation
-			//			reiInsertCount++
-			//			comConfDst.Id = uuid.NewV4()
-			//			if reiInsertCount < 3 {
-			//				goto reInsert
-			//			}
-			//		}
-			//	}
+			channelConfig.Error = err.Error()
+			if errCode, ok := err.(*pq.Error); ok {
+				if errCode.Code == "23505" { //unique_violation
+					errorDuplicates = append(errorDuplicates, channelConfig)
+					continue
+				}
+			}
 			utils.WriteLog(fmt.Sprintf("%s; [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
 			errorCount++
-			errorMessages = append(errorMessages, fmt.Sprintf("%s [INSERT] Error: %v ; DATA: %v", time.Now(), err, channelConfigDst))
+			errorMessages = append(errorMessages, channelConfig)
 			continue
 		}
 
 		successCount++
 	}
 
-	// Write error messages to a text file
-	formattedTime := time.Now().Format("2006-01-02_150405")
-	errorFileLog := fmt.Sprintf("error_messages_channel_config_%s.log", formattedTime)
-	if len(errorMessages) > 0 {
-		createFile, errCreate := os.Create(errorFileLog)
-		if errCreate != nil {
-			utils.WriteLog(fmt.Sprintf("%s [ERROR] Create File Error Log; Error: %v;", logPrefix, errCreate), utils.LogLevelError)
-			return
-		}
-		defer createFile.Close()
-
-		for _, errMsg := range errorMessages {
-			_, errWrite := createFile.WriteString(errMsg + "\n")
-			if errWrite != nil {
-				utils.WriteLog(fmt.Sprintf("%s [ERROR] Write File Error Log; Filename: %s; Error: %v;", logPrefix, errorFileLog, errCreate), utils.LogLevelError)
-			}
-		}
-
-		utils.WriteLog(fmt.Sprintf("%s [ERROR] Error messages written to %s", logPrefix, errorFileLog), utils.LogLevelError)
-	}
-
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [INSERT] TOTAL_INSERTED: %d; TOTAL_SUCCESS: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, insertedCount, successCount, errorCount, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
+	//write error to file
+	if len(errorMessages) > 0 {
+		filename := fmt.Sprintf("%s_%s", appName, time.Now().Format("2006_01_02"))
+		for _, errMsg := range errorMessages {
+			content, _ := json.Marshal(errMsg)
+			utils.WriteErrorMap(filename, string(content))
+		}
+	}
+	if len(errorDuplicates) > 0 {
+		filename := fmt.Sprintf("%s_%s_duplicate", appName, time.Now().Format("2006_01_02"))
+		for _, errMsg := range errorDuplicates {
+			content, _ := json.Marshal(errMsg)
+			utils.WriteErrorMap(filename, string(content))
+		}
+	}
+
 	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
+
 }
