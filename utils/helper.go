@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -72,4 +73,17 @@ func WriteLog(msg string, level int) {
 		log.Printf("%s [%s][DEBUG]%s\n\n", logTime, GetMyIP(), msg)
 	}
 
+}
+
+func WriteErrorMap(filename string, msg string) {
+	filename += ".err.log"
+	logFile, err := os.OpenFile("log/"+filename+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logFile.Close()
+	_, err = logFile.WriteString(msg + "\n")
+	if err != nil {
+		WriteLog(fmt.Sprintf("failed write to %s; error: %v", filename, err), LogLevelError)
+	}
 }
