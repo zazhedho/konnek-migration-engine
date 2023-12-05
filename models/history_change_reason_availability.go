@@ -18,4 +18,5 @@ type HistoryChangeReasonAvailability struct {
 	OldReason string    `json:"old_reason" gorm:"column:old_reason"`
 	NewReason string    `json:"new_reason" gorm:"column:new_reason"`
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	Error     string    `json:"error" gorm:"-"`
 }
