@@ -96,7 +96,7 @@ func main() {
 
 	// Write error messages to a text file
 	formattedTime := time.Now().Format("2006-01-02_150405")
-	errorFileLog := fmt.Sprintf("error_messages_companies_%s.log", formattedTime)
+	errorFileLog := fmt.Sprintf("error_messages_division_%s.log", formattedTime)
 	if len(errorMessages) > 0 {
 		createFile, errCreate := os.Create(errorFileLog)
 		if errCreate != nil {

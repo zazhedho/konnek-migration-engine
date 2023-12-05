@@ -61,53 +61,71 @@ func main() {
 	successCount := 0
 	errorCount := 0
 
-	//var errorMessages []string
+	var errorMessages []string
 
-	//for _, channelConfig := range channelConfigSc {
-	//var channelConfigDst models.ChannelConfigReeng
+	for _, channelConfig := range channelConfigSc {
+		var channelConfigDst models.ChannelConfigReeng
 
-	//insertedCount++
-	//	reiInsertCount := 0
-	//reInsert:
-	//if err := dstDB.Create(&comConfDst).Error; err != nil {
-	//	if errCode, ok := err.(*pq.Error); ok {
-	//		if errCode.Code == "23505" { //unique_violation
-	//			reiInsertCount++
-	//			comConfDst.Id = uuid.NewV4()
-	//			if reiInsertCount < 3 {
-	//				goto reInsert
-	//			}
-	//		}
-	//	}
-	//	utils.WriteLog(fmt.Sprintf("%s; [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
-	//	errorCount++
-	//	errorMessages = append(errorMessages, fmt.Sprintf("%s [INSERT] Error: %v ; DATA: %v", time.Now(), err, comConfDst))
-	//	continue
-	//}
+		channelConfigDst.Id = channelConfig.Id
+		channelConfigDst.CompanyId = channelConfig.CompanyId
 
-	//successCount++
-	//}
-	//
-	//// Write error messages to a text file
-	//formattedTime := time.Now().Format("2006-01-02_150405")
-	//errorFileLog := fmt.Sprintf("error_messages_companies_%s.log", formattedTime)
-	//if len(errorMessages) > 0 {
-	//	createFile, errCreate := os.Create(errorFileLog)
-	//	if errCreate != nil {
-	//		utils.WriteLog(fmt.Sprintf("%s [ERROR] Create File Error Log; Error: %v;", logPrefix, errCreate), utils.LogLevelError)
-	//		return
-	//	}
-	//	defer createFile.Close()
-	//
-	//	for _, errMsg := range errorMessages {
-	//		_, errWrite := createFile.WriteString(errMsg + "\n")
-	//		if errWrite != nil {
-	//			utils.WriteLog(fmt.Sprintf("%s [ERROR] Write File Error Log; Filename: %s; Error: %v;", logPrefix, errorFileLog, errCreate), utils.LogLevelError)
-	//		}
-	//	}
-	//
-	//	utils.WriteLog(fmt.Sprintf("%s [ERROR] Error messages written to %s", logPrefix, errorFileLog), utils.LogLevelError)
-	//}
+		channelName := channelConfig.Channel.Name
+		if channelName == "widget" {
+			channelName = "web"
+		}
+		channelConfigDst.ChannelCode = channelName
+		channelConfigDst.Key = channelConfig.Key
+		channelConfigDst.Content = channelConfig.Content
+		channelConfigDst.CreatedAt = channelConfig.CreatedAt
+		channelConfigDst.CreatedBy = uuid.Nil
+		channelConfigDst.UpdatedAt = channelConfig.UpdatedAt
+		channelConfigDst.UpdatedBy = uuid.Nil
+		channelConfigDst.DeletedAt = channelConfig.DeletedAt
+		channelConfigDst.DeletedBy = uuid.Nil
+		channelConfigDst.ErrMessage = channelConfig.ErrMessage
+
+		insertedCount++
+		//	reiInsertCount := 0
+		//reInsert:
+		if err := dstDB.Create(&channelConfigDst).Error; err != nil {
+			//	if errCode, ok := err.(*pq.Error); ok {
+			//		if errCode.Code == "23505" { //unique_violation
+			//			reiInsertCount++
+			//			comConfDst.Id = uuid.NewV4()
+			//			if reiInsertCount < 3 {
+			//				goto reInsert
+			//			}
+			//		}
+			//	}
+			utils.WriteLog(fmt.Sprintf("%s; [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
+			errorCount++
+			errorMessages = append(errorMessages, fmt.Sprintf("%s [INSERT] Error: %v ; DATA: %v", time.Now(), err, channelConfigDst))
+			continue
+		}
+
+		successCount++
+	}
+
+	// Write error messages to a text file
+	formattedTime := time.Now().Format("2006-01-02_150405")
+	errorFileLog := fmt.Sprintf("error_messages_channel_config_%s.log", formattedTime)
+	if len(errorMessages) > 0 {
+		createFile, errCreate := os.Create(errorFileLog)
+		if errCreate != nil {
+			utils.WriteLog(fmt.Sprintf("%s [ERROR] Create File Error Log; Error: %v;", logPrefix, errCreate), utils.LogLevelError)
+			return
+		}
+		defer createFile.Close()
+
+		for _, errMsg := range errorMessages {
+			_, errWrite := createFile.WriteString(errMsg + "\n")
+			if errWrite != nil {
+				utils.WriteLog(fmt.Sprintf("%s [ERROR] Write File Error Log; Filename: %s; Error: %v;", logPrefix, errorFileLog, errCreate), utils.LogLevelError)
+			}
+		}
+
+		utils.WriteLog(fmt.Sprintf("%s [ERROR] Error messages written to %s", logPrefix, errorFileLog), utils.LogLevelError)
+	}
 
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [INSERT] TOTAL_INSERTED: %d; TOTAL_SUCCESS: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, insertedCount, successCount, errorCount, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
