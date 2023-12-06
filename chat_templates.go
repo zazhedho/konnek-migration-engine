@@ -113,6 +113,7 @@ func main() {
 		//reiInsertCount := 0
 		//reInsert:
 		if err := dstDB.Create(&chatTemplDst).Error; err != nil {
+			utils.WriteLog(fmt.Sprintf("%s; [FAILED] [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
 			chatTemplate.Error = err.Error()
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
@@ -120,7 +121,7 @@ func main() {
 					continue
 				}
 			}
-			utils.WriteLog(fmt.Sprintf("%s; [FAILED] [INSERT] Error: %v", logPrefix, err), utils.LogLevelError)
+
 			errorCount++
 			errorMessages = append(errorMessages, chatTemplate)
 			continue

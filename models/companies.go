@@ -29,6 +29,7 @@ type CompanyExist struct {
 	PasswordCGW          string     `json:"password_cgw" gorm:"column:password_cgw"`
 	WabaIdSandeza        string     `json:"waba_id_sandeza" gorm:"column:waba_id_sandeza"`
 	SenderIdSandeza      string     `json:"sender_id_sandeza" gorm:"column:sender_id_sandeza"`
+	Error                string     `json:"error" gorm:"-"`
 }
 
 func (CompanyReeng) TableName() string {
