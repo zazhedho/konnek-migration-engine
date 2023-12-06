@@ -50,6 +50,7 @@ type Configuration struct {
 	MaintenanceMessage            string     `json:"maintenance_message" gorm:"column:maintenance_message"`
 	KeywordGreetingsLimit         int        `json:"keyword_greetings_limit" gorm:"column:keyword_greetings_limit"`
 	KeywordGreetingsLimitDuration int        `json:"keyword_greetings_limit_duration" gorm:"column:keyword_greetings_limit_duration"`
+	Error                         string     `json:"error" gorm:"-"`
 }
 
 func (CompanyConfig) TableName() string {
