@@ -223,7 +223,7 @@ func main() {
 
 	//write error to file
 	if len(errorMessages) > 0 {
-		filename := fmt.Sprintf("%s_%s_%s", appName, time.Now().Format("2006_01_02"), time.Now().Unix())
+		filename := fmt.Sprintf("%s_%s_%v", appName, time.Now().Format("2006_01_02"), time.Now().Unix())
 		utils.WriteErrorMap(filename, errorMessages)
 	}
 	if len(errorDuplicates) > 0 {
