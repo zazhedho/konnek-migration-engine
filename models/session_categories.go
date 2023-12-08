@@ -20,6 +20,7 @@ type SessionCategory struct {
 	UpdatedBy   uuid.UUID  `json:"updated_by" gorm:"column:updated_by"`
 	DeletedAt   *time.Time `json:"-" gorm:"column:deleted_at"`
 	DeletedBy   uuid.UUID  `json:"deleted_by" gorm:"column:deleted_by"`
+	Error       string     `json:"error" gorm:"-"`
 }
 
 func (SessionCategories) TableName() string {

@@ -17,4 +17,5 @@ type RoomDetails struct {
 	SessionID      uuid.UUID  `json:"session_id" gorm:"column:session_id"`
 	CreatedAt      time.Time  `json:"created_at" gorm:"column:created_at"`
 	DeletedAt      *time.Time `json:"-" gorm:"column:deleted_at"`
+	Error          string     `json:"error" gorm:"-"`
 }

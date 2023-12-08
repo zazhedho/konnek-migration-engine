@@ -34,6 +34,7 @@ type Session struct {
 	AgentUserId       uuid.UUID     `json:"agent_user_id" gorm:"column:agent_user_id"`
 	DivisionId        uuid.UUID     `json:"division_id" gorm:"column:division_id"`
 	BotStatus         bool          `json:"bot_status" gorm:"bot_status"`
+	Error             string        `json:"error" gorm:"-"`
 }
 
 func (Sessions) TableName() string {
