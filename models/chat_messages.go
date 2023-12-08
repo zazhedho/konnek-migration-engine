@@ -141,18 +141,16 @@ type LocationMessage struct {
 }
 
 type CarouselMessage struct {
-	Body struct {
-		Carousel []CarouselStruct `json:"carousel"`
-	} `json:"body"`
-	Header HeaderMessage `json:"header"`
-	Footer FooterMessage `json:"footer"`
+	Body   []BodyCarousel `json:"body"`
+	Header HeaderMessage  `json:"header"`
+	Footer FooterMessage  `json:"footer"`
 }
 
-type CarouselStruct struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	MediaUrl    string   `json:"media_url"`
+type BodyCarousel struct {
 	Actions     []Action `json:"actions"`
+	Description string   `json:"description"`
+	Title       string   `json:"title"`
+	MediaUrl    string   `json:"media_url"`
 }
 
 type Action struct {

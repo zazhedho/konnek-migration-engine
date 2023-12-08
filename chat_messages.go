@@ -137,6 +137,7 @@ func main() {
 		}
 
 		var payloadDecode map[string]interface{}
+		var payloadValDecode map[string]interface{}
 		var payloadLocation string
 		var payloadTemplate string
 		var payload string
@@ -144,30 +145,47 @@ func main() {
 		if err := json.Unmarshal([]byte(dataChatMessageEx.Message), &payloadDecode); err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v", logPrefix, err), utils.LogLevelError)
 		} else {
-			if v, ok := payloadDecode["payload"].(map[string]interface{})["template_type"]; ok {
-				payloadTemplate = v.(string)
-				messageType = models.MessageTypeMap[payloadTemplate]
-			} else if v, ok = payloadDecode["payload"].(map[string]interface{})["type"]; ok {
-				payloadTemplate = v.(string)
-				messageType = models.MessageTypeMap[payloadLocation]
-			} else if _, ok = payloadDecode["payload"].(map[string]interface{})["key"]; ok {
-				messageType = models.MessagePostback
+			if v, ok := payloadDecode["payload"]; ok {
+				switch v.(type) {
+				case map[string]interface{}:
+					if v, ok = payloadDecode["payload"].(map[string]interface{})["template_type"]; ok {
+						payloadTemplate = v.(string)
+						if dataChatMessageEx.FromType != 4 {
+							messageType = models.MessageTypeMap[payloadTemplate]
+						}
+					}
+				case string:
+					if err = json.Unmarshal([]byte(payloadDecode["payload"].(string)), &payloadValDecode); err != nil {
+						utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v", logPrefix, err), utils.LogLevelError)
+					}
+					if v, ok = payloadValDecode["type"]; ok {
+						payloadLocation = v.(string)
+						if dataChatMessageEx.FromType != 4 {
+							messageType = models.MessageTypeMap[payloadLocation]
+						}
+					} else if _, ok = payloadValDecode["key"]; ok {
+						messageType = models.MessagePostback
+					}
+				}
 			}
 
 			var actions []models.Action
 			if messageType == models.MessageButton {
 				var buttonMessage models.ButtonMessage
-				payloadAction := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["actions"].([]map[string]interface{})
+				payloadAction := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["actions"].([]interface{})
 				for _, action := range payloadAction {
 					actions = append(actions, models.Action{
-						Key:   action["payload"].(map[string]interface{})["key"].(string),
-						Title: action["label"].(string),
-						Type:  action["type"].(string),
+						Key:   action.(map[string]interface{})["payload"].(map[string]interface{})["key"].(string),
+						Title: action.(map[string]interface{})["label"].(string),
+						Type:  action.(map[string]interface{})["type"].(string),
 					})
 				}
 				buttonMessage.Body = actions
+				buttonMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["text"].(string)
+				buttonMessage.Header.Type = "text"
 				buttonMessageByte, _ := json.Marshal(buttonMessage)
 				payload = string(buttonMessageByte)
+				textMessage = buttonMessage.Header.Text
 			} else if messageType == models.MessageList {
 				var listMessage models.ListMessage
 
@@ -176,15 +194,15 @@ func main() {
 				listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
 				listMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
 
-				payloadSection := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"].([]map[string]interface{})
+				payloadSection := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"].([]interface{})
 				var listSection []models.Section
 				for _, section := range payloadSection {
 					actions = []models.Action{}
-					for _, row := range section["rows"].([]map[string]interface{}) {
+					for _, row := range section.(map[string]interface{})["rows"].([]interface{}) {
 						actions = append(actions, models.Action{
-							Description: row["description"].(string),
-							Key:         row["id"].(string),
-							Title:       row["title"].(string),
+							Description: row.(map[string]interface{})["description"].(string),
+							Key:         row.(map[string]interface{})["id"].(string),
+							Title:       row.(map[string]interface{})["title"].(string),
 						})
 					}
 					listSection = append(listSection, models.Section{
@@ -194,47 +212,56 @@ func main() {
 				listMessage.Body.Sections = listSection
 				listMessageByte, _ := json.Marshal(listMessage)
 				payload = string(listMessageByte)
+				textMessage = listMessage.Body.Title
 			} else if messageType == models.MessagePostback {
 				postbackMsg := models.PostbackMessage{
 					Type:  payloadDecode["type"].(string),
 					Title: payloadDecode["label"].(string),
-					Key:   payloadDecode["payload"].(map[string]interface{})["key"].(string),
+					Key:   payloadValDecode["key"].(string),
+					Value: payloadDecode["label"].(string),
 				}
 				postbackMsgByte, _ := json.Marshal(postbackMsg)
 				payload = string(postbackMsgByte)
+				textMessage = postbackMsg.Value
 			} else if messageType == models.MessageLocation {
+				livePeriod := 0
+				if val, isset := payloadValDecode["live_period"]; isset {
+					livePeriod = int(val.(float64))
+				}
 				locationMsg := models.LocationMessage{
-					Lat:        payloadDecode["payload"].(map[string]interface{})["latitude"].(float64),
-					Lng:        payloadDecode["payload"].(map[string]interface{})["longitude"].(float64),
-					Address:    payloadDecode["payload"].(map[string]interface{})["address"].(string),
-					Name:       payloadDecode["type"].(string),
-					LivePeriod: int(payloadDecode["payload"].(map[string]interface{})["live_period"].(float64)),
+					Lat:        payloadValDecode["latitude"].(float64),
+					Lng:        payloadValDecode["longitude"].(float64),
+					Address:    payloadValDecode["address"].(string),
+					Name:       payloadDecode["label"].(string),
+					LivePeriod: livePeriod,
 				}
 				locationMsgByte, _ := json.Marshal(locationMsg)
 				payload = string(locationMsgByte)
+				textMessage = locationMsg.Name
 			} else if messageType == models.MessageCarousel {
 				var carouselMessage models.CarouselMessage
-				payloadItems := payloadDecode["payload"].(map[string]interface{})["items"].([]map[string]interface{})
-				var listCarousel []models.CarouselStruct
+				payloadItems := payloadDecode["payload"].(map[string]interface{})["items"].([]interface{})
+				var bodyCarousel []models.BodyCarousel
 				for _, item := range payloadItems {
 					actions = []models.Action{}
-					for _, action := range item["actions"].([]map[string]interface{}) {
+					for _, action := range item.(map[string]interface{})["actions"].([]interface{}) {
 						actions = append(actions, models.Action{
-							Type:  action["type"].(string),
-							Key:   action["payload"].(map[string]interface{})["key"].(string),
-							Title: action["label"].(string),
+							Type:  action.(map[string]interface{})["type"].(string),
+							Key:   action.(map[string]interface{})["payload"].(map[string]interface{})["key"].(string),
+							Title: action.(map[string]interface{})["label"].(string),
 						})
 					}
-					listCarousel = append(listCarousel, models.CarouselStruct{
-						Title:       item["title"].(string),
-						Description: item["text"].(string),
-						MediaUrl:    item["thumbnailImageUrl"].(string),
+					bodyCarousel = append(bodyCarousel, models.BodyCarousel{
+						Title:       item.(map[string]interface{})["title"].(string),
+						Description: item.(map[string]interface{})["text"].(string),
+						MediaUrl:    item.(map[string]interface{})["thumbnailImageUrl"].(string),
 						Actions:     actions,
 					})
 				}
-				carouselMessage.Body.Carousel = listCarousel
+				carouselMessage.Body = bodyCarousel
 				carouselMsgByte, _ := json.Marshal(carouselMessage)
 				payload = string(carouselMsgByte)
+				textMessage = ""
 			} else if dataChatMessageEx.FromType == 4 {
 				messageType = models.MessageTemplate
 
@@ -246,6 +273,7 @@ func main() {
 
 				templateMessageByte, _ := json.Marshal(templateMessage)
 				payload = string(templateMessageByte)
+				textMessage = templateMessage.Body.Text
 			}
 		}
 
