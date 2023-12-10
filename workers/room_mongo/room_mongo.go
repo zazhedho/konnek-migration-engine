@@ -39,7 +39,11 @@ func main() {
 	}(conn)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v][rooms]", logID)
+	appName := "room_mongo"
+	if os.Getenv("APP_NAME") != "" {
+		appName = os.Getenv("APP_NAME")
+	}
+	logPrefix := fmt.Sprintf("[%v][%v]", logID, appName)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
@@ -50,15 +54,18 @@ func main() {
 
 	//Set the filters
 	if os.Getenv("COMPANYID") != "" {
-		dstDB = dstDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+		dstDB = dstDB.Where("r.company_id = ?", os.Getenv("COMPANYID"))
+	}
+	if os.Getenv("ROOM_ID") != "" {
+		dstDB = dstDB.Where("r.id = ?", os.Getenv("ROOM_ID"))
 	}
 
 	if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-		dstDB = dstDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+		dstDB = dstDB.Where("r.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 	} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-		dstDB = dstDB.Where("created_at >=?", os.Getenv("START_DATE"))
+		dstDB = dstDB.Where("r.created_at >=?", os.Getenv("START_DATE"))
 	} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-		dstDB = dstDB.Where("created_at <=?", os.Getenv("END_DATE"))
+		dstDB = dstDB.Where("r.created_at <=?", os.Getenv("END_DATE"))
 	}
 
 	if os.Getenv("ORDER_BY") != "" {
@@ -83,20 +90,14 @@ func main() {
 
 	// Query data dari new PSQL database untuk di store ke mongoDB
 	var dataRooms []models.FetchRoom
-	sqlQuery := `
-		SELECT
-		    r.company_id, r.channel_code, r.customer_user_id, r.id, s.id AS session_id, s.seq_id, s.division_id, s.agent_user_id, s.last_chat_message_id, s.categories, s.bot_status, s.status, s.open_time, s.queue_time, s.assign_time, s.first_response_time, s.last_agent_chat_time, s.close_time, cm.message_id, cm.reply_id AS message_reply_id, cm.from_type AS message_from_type, cm.type AS message_type, cm.text AS message_text, cm.payload AS message_payload, cm.status AS message_status, cm.message_time, cm.created_at AS message_created_at, cm.id AS chat_message_id, cm.seq_id AS conversation_seq_id, cust.name AS customer_name, cust.username AS customer_username, agent.name AS agent_name, agent.username AS agent_username
-		FROM rooms r
-		JOIN sessions s ON s.id = r.last_session_id
-		JOIN users cust ON cust.id = r.customer_user_id
-		LEFT JOIN chat_messages cm ON cm.room_id = r.id
-		LEFT JOIN users agent ON agent.id = s.agent_user_id
-		WHERE 1=1
-	`
-	if os.Getenv("ROOM_ID") != "" {
-		sqlQuery += fmt.Sprintf(` AND r.id = '%s'`, os.Getenv("ROOM_ID"))
-	}
-	dstDB.Raw(sqlQuery).Scan(&dataRooms)
+	dstDB.Select("r.company_id, r.channel_code, r.customer_user_id, r.id, s.id AS session_id, s.seq_id, s.division_id, s.agent_user_id, s.last_chat_message_id, s.categories, s.bot_status, s.status, s.open_time, s.queue_time, s.assign_time, s.first_response_time, s.last_agent_chat_time, s.close_time, cm.message_id, cm.reply_id AS message_reply_id, cm.from_type AS message_from_type, cm.type AS message_type, cm.text AS message_text, cm.payload AS message_payload, cm.status AS message_status, cm.message_time, cm.created_at AS message_created_at, cm.id AS chat_message_id, cm.seq_id AS conversation_seq_id, cust.name AS customer_name, cust.username AS customer_username, agent.name AS agent_name, agent.username AS agent_username").
+		Table("rooms r").
+		Joins("JOIN sessions s ON s.id = r.last_session_id").
+		Joins("JOIN users cust ON cust.id = r.customer_user_id").
+		Joins("LEFT JOIN chat_messages cm ON cm.room_id = r.id").
+		Joins("LEFT JOIN users agent ON agent.id = s.agent_user_id").
+		Where("1 = ?", 1).
+		Find(&dataRooms)
 
 	debug++
 	logPrefix += "[dstDB]"
@@ -175,16 +176,19 @@ func main() {
 		}
 		//insert into mongodb room_open
 		if fetchRoom.Status != -1 {
+			//first, delete room_open to avoid duplicates
+			_, err = mongDb.DeleteMany(os.Getenv("COMPANYID")+"_room_open", filter)
+
 			if _, err = mongDb.Store(fetchRoom.CompanyId.String()+"_room_open", mongoData); err != nil {
-				utils.WriteLog(fmt.Sprintf("%s; failed insert room_open: %s; error: %v", logPrefix, fetchRoom.Id, err), utils.LogLevelError)
+				utils.WriteLog(fmt.Sprintf("%s; failed insert room_open: %s; error: %v", logPrefix, fetchRoom.Id.String(), err), utils.LogLevelError)
 				errCountMdb++
 				errorMessages = append(errorMessages, fmt.Sprintf("[%v] insert error: %v | DATA mongoDB: %v", time.Now(), err.Error(), mongoData))
 				continue
 			}
 
-			//delete from mongoDB room_close
+			//delete from mongoDB room_close after insert into mongoDB room_open
 			if _, err = mongDb.Delete(fetchRoom.CompanyId.String()+"_room_closed", filter); err != nil {
-				utils.WriteLog(fmt.Sprintf("%s; failed delete from mongoDB: %s; error: %v", logPrefix, fetchRoom.Id, err), utils.LogLevelError)
+				utils.WriteLog(fmt.Sprintf("%s; failed delete from mongoDB: %s; error: %v", logPrefix, fetchRoom.Id.String(), err), utils.LogLevelError)
 				if fetchRoom.AgentUserId != uuid.Nil { //delete from mongoDB room_closed_agent if agent exists
 					_, err = mongDb.Delete(fetchRoom.AgentUserId.String()+"_room_closed_agent", filter)
 				}
