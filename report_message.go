@@ -46,7 +46,7 @@ func main() {
 	debug := 0
 	debugT := time.Now()
 
-	var lists []models.ChatMessageRpt
+	var lists []models.FetchReportReportMessage
 
 	// Get from file
 	if os.Getenv("GET_FROM_FILE") != "" {
@@ -128,8 +128,8 @@ func main() {
 	}
 
 	//Insert into database report
-	var errorMessages []models.ChatMessageRpt
-	var errorDuplicates []models.ChatMessageRpt
+	var errorMessages []models.FetchReportReportMessage
+	var errorDuplicates []models.FetchReportReportMessage
 	totalInserted := 0
 
 	for _, list := range lists {

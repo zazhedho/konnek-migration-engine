@@ -37,12 +37,12 @@ type ReportMessage struct {
 	UpdatedBy  string    `json:"updated_by" gorm:"column:updated_by"`
 }
 
-func (ChatMessageRpt) TableName() string {
+func (FetchReportReportMessage) TableName() string {
 	return "chat_messages"
 }
 
 // ChatMessages struct db reengineering
-type ChatMessageRpt struct {
+type FetchReportReportMessage struct {
 	Id                uuid.UUID    `json:"id" gorm:"column:id"`
 	RoomId            uuid.UUID    `json:"room_id" gorm:"column:room_id"`
 	SessionId         uuid.UUID    `json:"session_id" gorm:"column:session_id"`
