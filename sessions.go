@@ -1,12 +1,13 @@
 package main
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
+	"io/ioutil"
 	"konnek-migration/models"
 	"konnek-migration/utils"
 	"os"
@@ -35,64 +36,96 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	logPrefix := fmt.Sprintf("[%v][sessions]", logID)
+	appName := "sessions"
+	if os.Getenv("APP_NAME") != "" {
+		appName = os.Getenv("APP_NAME")
+	}
+	logPrefix := fmt.Sprintf("[%v][%v]", logID, appName)
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
 	debug := 0
 	debugT := time.Now()
 
-	//Fetch the data from existing PSQL database
-	//Set the filters
-	if os.Getenv("COMPANYID") != "" {
-		scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
-	}
-
-	if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-		scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
-	} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-		scDB = scDB.Where("created_at >=?", os.Getenv("START_DATE"))
-	} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-		scDB = scDB.Where("created_at <=?", os.Getenv("END_DATE"))
-	}
-
-	if os.Getenv("ORDER_BY") != "" {
-		sortMap := map[string]string{
-			"created_at": "created_at",
-		}
-		if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
-			scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
-		} else {
-			scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")])
-		}
-	}
-
-	offset, _ := strconv.Atoi(os.Getenv("OFFSET"))
-	limit, _ := strconv.Atoi(os.Getenv("LIMIT"))
-	if offset > 0 {
-		scDB = scDB.Offset(offset)
-	}
-	if limit > 0 {
-		scDB = scDB.Limit(limit)
-	}
-
-	// query data dari source PSQL DB
 	var dataSessions []models.Session
-	if err := scDB.Preload("ChatMessage", func(db *gorm.DB) *gorm.DB {
-		return db.Order("chat_messages.created_at DESC")
-	}).Find(&dataSessions).Error; err != nil {
-		utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
-	}
-	totalFetch := len(dataSessions)
+	// Get from file
+	if os.Getenv("GET_FROM_FILE") != "" {
+		utils.WriteLog(fmt.Sprintf("%s get from file %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelDebug)
+		// Read the JSON file
+		fileContent, err := ioutil.ReadFile("data/" + os.Getenv("GET_FROM_FILE"))
+		if err != nil {
+			fmt.Printf("%s Error reading file: %v\n", logPrefix, err)
+			utils.WriteLog(fmt.Sprintf("%s Error reading file: %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelError)
+			return
+		}
 
-	debug++
-	utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
-	debugT = time.Now()
+		// Unmarshal the JSON data into the struct
+		err = json.Unmarshal(fileContent, &dataSessions)
+		if err != nil {
+			fmt.Printf("%s Error unmarshalling: %v\n", logPrefix, err)
+			utils.WriteLog(fmt.Sprintf("%s Error unmarshalling JSON: %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelError)
+			return
+		}
+		debug++
+		utils.WriteLog(fmt.Sprintf("%s [GET_FROM_FILE] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, len(dataSessions), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+		debugT = time.Now()
+
+		err = os.Remove("data/" + os.Getenv("GET_FROM_FILE"))
+		if err != nil {
+			utils.WriteLog(fmt.Sprintf("%s Error Delete file: %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelError)
+		}
+	} else {
+		//Fetch the data from existing PSQL database
+		//Set the filters
+		if os.Getenv("COMPANYID") != "" {
+			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+		}
+
+		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
+			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
+			scDB = scDB.Where("created_at >=?", os.Getenv("START_DATE"))
+		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
+			scDB = scDB.Where("created_at <=?", os.Getenv("END_DATE"))
+		}
+
+		if os.Getenv("ORDER_BY") != "" {
+			sortMap := map[string]string{
+				"created_at": "created_at",
+			}
+			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
+				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
+			} else {
+				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")])
+			}
+		}
+
+		offset, _ := strconv.Atoi(os.Getenv("OFFSET"))
+		limit, _ := strconv.Atoi(os.Getenv("LIMIT"))
+		if offset > 0 {
+			scDB = scDB.Offset(offset)
+		}
+		if limit > 0 {
+			scDB = scDB.Limit(limit)
+		}
+
+		// query data dari source PSQL DB
+		if err := scDB.Preload("ChatMessage", func(db *gorm.DB) *gorm.DB {
+			return db.Order("chat_messages.created_at DESC")
+		}).Find(&dataSessions).Error; err != nil {
+			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+		}
+		totalFetch := len(dataSessions)
+
+		debug++
+		utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+		debugT = time.Now()
+	}
 
 	//Insert into the new PSQL database
-	var errorMessages []string
+	var errorMessages []models.Session
+	var errorDuplicates []models.Session
 	totalInserted := 0 //success insert
-	errCount := 0
 	for _, dataSession := range dataSessions {
 		status := 0
 		if dataSession.QueTime.IsZero() {
@@ -137,23 +170,31 @@ func main() {
 		}
 
 		if err := dstDB.Create(&mSessions).Error; err != nil {
-			var errCode *pq.Error
-			if errors.As(err, &errCode) {
+			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
+			dataSession.Error = err.Error()
+			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
-					mSessions.Id = uuid.NewV4()
-					if err = dstDB.Create(&mSessions).Error; err != nil {
-						utils.WriteLog(fmt.Sprintf("%s; failed insert to SQL: %s; error: %v", logPrefix, mSessions.Id, err), utils.LogLevelError)
-					}
+					errorDuplicates = append(errorDuplicates, dataSession)
+					continue
 				}
 			}
-
-			utils.WriteLog(fmt.Sprintf("%s; failed insert to SQL: %s; error: %v", logPrefix, mSessions.Id, err), utils.LogLevelError)
-			errCount++
-			errorMessages = append(errorMessages, fmt.Sprintf("[%v] insert error: %v | DATA SQL: %v", time.Now(), err.Error(), mSessions))
+			errorMessages = append(errorMessages, dataSession)
 			continue
 		}
 		totalInserted++
 	}
 	debug++
-	utils.WriteLog(fmt.Sprintf("%s [PSQL] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalInserted, errCount, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	utils.WriteLog(fmt.Sprintf("%s [PSQL] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+
+	//write error to file
+	if len(errorMessages) > 0 {
+		filename := fmt.Sprintf("%s_%s_%v", appName, time.Now().Format("2006_01_02"), time.Now().Unix())
+		utils.WriteErrorMap(filename, errorMessages)
+	}
+	if len(errorDuplicates) > 0 {
+		filename := fmt.Sprintf("%s_%s_%v_duplicate", appName, time.Now().Format("2006_01_02"), time.Now().Unix())
+		utils.WriteErrorMap(filename, errorDuplicates)
+	}
+
+	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
 }
