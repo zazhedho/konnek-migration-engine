@@ -81,7 +81,9 @@ func main() {
 
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+			scDB = scDB.Preload("User", func(db *gorm.DB) *gorm.DB {
+				return db.Where("company_id = ?", os.Getenv("COMPANYID"))
+			})
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {

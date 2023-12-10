@@ -13,6 +13,7 @@ type Participants struct {
 	Id        uuid.UUID  `gorm:"column:id" json:"id"`
 	SessionID uuid.UUID  `gorm:"column:session_id" json:"session_id"`
 	UserID    uuid.UUID  `gorm:"column:user_id" json:"user_id"`
+	User      User       `json:"user" gorm:"foreignKey:UserID;AssociationForeignKey:Id;"`
 	Status    bool       `gorm:"column:status" json:"status"`
 	CreatedAt time.Time  `gorm:"column:created_at" json:"created_at"`
 	CreatedBy uuid.UUID  `gorm:"column:created_by" json:"created_by"`
