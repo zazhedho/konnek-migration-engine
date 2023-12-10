@@ -32,6 +32,14 @@ func main() {
 		}
 	}(dstDB)
 
+	dbReport := utils.GetDBReportConnection()
+	defer func(dbReport *gorm.DB) {
+		err := dbReport.Close()
+		if err != nil {
+			utils.WriteLog(fmt.Sprintf("Close Connection scDb; ERROR: %+v", err), utils.LogLevelError)
+		}
+	}(dbReport)
+
 	logID := uuid.NewV4()
 	appName := "companies"
 	if os.Getenv("APP_NAME") != "" {
@@ -131,6 +139,10 @@ func main() {
 		}
 
 		successCount++
+
+		if err := dbReport.Exec(getTableStructureChatReport(company.Id.String())).Error; err != nil {
+			utils.WriteLog(fmt.Sprintf("%s; create table report Error: %+v;", logPrefix, err), utils.LogLevelError)
+		}
 	}
 
 	debug++
@@ -147,4 +159,329 @@ func main() {
 	}
 
 	utils.WriteLog(fmt.Sprintf("%s end; duration: %v", logPrefix, time.Now().Sub(tStart)), utils.LogLevelDebug)
+}
+
+func getTableStructureChatReport(companyId string) string {
+	return `
+CREATE TABLE "` + companyId + `_session" (
+  "id" uuid NOT NULL,
+  "company_id" uuid,
+  "company_code" varchar(25),
+  "company_name" varchar(50),
+  "customer_id" uuid,
+  "customer_username" varchar(100),
+  "customer_name" varchar(100),
+  "customer_tags" text,
+  "channel" varchar(10),
+  "room_id" uuid,
+  "division_id" uuid,
+  "division_name" varchar(100),
+  "agent_id" uuid,
+  "agent_username" varchar(100),
+  "agent_name" varchar(100),
+  "categories" text,
+  "bot_status" bool,
+  "status" int2,
+  "open_time" timestamptz,
+  "queue_time" timestamptz,
+  "assign_time" timestamptz,
+  "fr_time" timestamptz,
+  "lr_time" timestamptz,
+  "close_time" timestamptz,
+  "waiting_duration" int8,
+  "fr_duration" int8,
+  "resolve_duration" int8,
+  "session_duration" int8,
+  "sla_from" varchar(25),
+  "sla_to" varchar(25),
+  "sla_threshold" int2,
+  "sla_duration" int8,
+  "sla_status" varchar(10),
+  "open_by" uuid,
+  "open_username" varchar(100),
+  "open_name" varchar(100),
+  "handover_by" uuid,
+  "handover_username" varchar(100),
+  "handover_name" varchar(100),
+  "close_by" uuid,
+  "close_username" varchar(100),
+  "close_name" varchar(100),
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("id")
+);
+
+CREATE INDEX "idx_` + companyId + `_session_company_id" ON "` + companyId + `_session" (
+  "company_id"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_customer_id" ON "` + companyId + `_session" (
+  "customer_id"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_customer_name" ON "` + companyId + `_session" (
+  "company_name"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_channel" ON "` + companyId + `_session" (
+  "channel"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_agent_name" ON "` + companyId + `_session" (
+  "agent_name"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_status" ON "` + companyId + `_session" (
+  "status"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_categoories" ON "` + companyId + `_session" (
+  "categories"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_sla_status" ON "` + companyId + `_session" (
+  "sla_status"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_open_time" ON "` + companyId + `_session" (
+  "open_time"
+);
+
+CREATE INDEX "idx_` + companyId + `_session_last_update" ON "` + companyId + `_session" (
+  "last_update"
+);
+
+COMMENT ON COLUMN "` + companyId + `_session"."id" IS 'sessionId';
+COMMENT ON COLUMN "` + companyId + `_session"."waiting_duration" IS 'assign - queue';
+COMMENT ON COLUMN "` + companyId + `_session"."fr_duration" IS 'fr - assign';
+COMMENT ON COLUMN "` + companyId + `_session"."resolve_duration" IS 'close - assign';
+COMMENT ON COLUMN "` + companyId + `_session"."session_duration" IS 'close - open';
+
+CREATE TABLE "` + companyId + `_message" (
+  "id" uuid NOT NULL,
+  "message_id" varchar(36),
+  "reply_id" varchar(36),
+  "room_id" uuid,
+  "session_id" uuid,
+  "from_type" char(1),
+  "user_id" uuid,
+  "username" varchar(100),
+  "user_fullname" varchar(100),
+  "type" varchar(20),
+  "text" text,
+  "payload" text,
+  "status" int2,
+  "message_time" timestamptz,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("id")
+);
+
+CREATE INDEX "idx_` + companyId + `_message_message_id" ON "` + companyId + `_message" (
+  "message_id"
+);
+
+CREATE INDEX "idx_` + companyId + `_message_room_id" ON "` + companyId + `_message" (
+  "room_id"
+);
+
+CREATE INDEX "idx_` + companyId + `_message_session_id" ON "` + companyId + `_message" (
+  "session_id"
+);
+
+CREATE INDEX "idx_` + companyId + `_message_text" ON "` + companyId + `_message" (
+  "text"
+);
+
+CREATE INDEX "idx_` + companyId + `_message_message_time" ON "` + companyId + `_message" (
+  "message_time"
+);
+
+CREATE INDEX "idx_` + companyId + `_message_last_update" ON "` + companyId + `_message" (
+  "last_update"
+);
+
+
+CREATE TABLE "` + companyId + `_summary_hourly_perchannel" (
+  "datetime" varchar(16) NOT NULL,
+  "channel" varchar(20),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("datetime", "channel")
+);
+
+
+CREATE TABLE "` + companyId + `_summary_daily_perchannel" (
+  "date" date NOT NULL,
+  "channel" varchar(20),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("date", "channel")
+);
+
+
+CREATE TABLE "` + companyId + `_summary_perchannel" (
+  "channel" varchar(20),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("channel")
+);
+
+
+CREATE TABLE "` + companyId + `_summary_daily_percustomer" (
+  "date" date NOT NULL,
+  "customer_id" uuid NOT NULL,
+  "customer_username" varchar(100),
+  "customer_name" varchar(100),
+  "customer_tags" text,
+  "channel" varchar(20),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("date", "customer_id")
+);
+
+
+CREATE TABLE "` + companyId + `_summary_percustomer" (
+  "customer_id" uuid NOT NULL,
+  "customer_username" varchar(100),
+  "customer_name" varchar(100),
+  "customer_tags" text,
+  "channel" varchar(20),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("customer_id")
+);
+
+
+CREATE TABLE "` + companyId + `_summary_daily_peragent" (
+  "date" date NOT NULL,
+  "agent_id" uuid NOT NULL,
+  "agent_username" varchar(100),
+  "agent_name" varchar(100),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("date", "agent_id")
+);
+
+
+CREATE TABLE "` + companyId + `_summary_peragent" (
+  "agent_id" uuid NOT NULL,
+  "agent_username" varchar(100),
+  "agent_name" varchar(100),
+  "open" int8 NOT NULL DEFAULT 0,
+  "waiting" int8 NOT NULL DEFAULT 0,
+  "assigned" int8 NOT NULL DEFAULT 0,
+  "handover" int8 NOT NULL DEFAULT 0,
+  "close" int8 NOT NULL DEFAULT 0,
+  "total" int8 NOT NULL DEFAULT 0,
+  "sla_success" int8 NOT NULL DEFAULT 0,
+  "sla_fail" int8 NOT NULL DEFAULT 0,
+  "waiting_duration" int8 NOT NULL DEFAULT 0,
+  "fr_duration" int8 NOT NULL DEFAULT 0,
+  "resolve_duration" int8 NOT NULL DEFAULT 0,
+  "session_duration" int8 NOT NULL DEFAULT 0,
+  "last_update" timestamptz NOT NULL DEFAULT now(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "created_by" varchar(100),
+  "updated_at" timestamptz,
+  "updated_by" varchar(100),
+  PRIMARY KEY ("agent_id")
+);
+`
 }
