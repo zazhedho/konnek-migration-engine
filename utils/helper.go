@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 	"net"
 	"os"
@@ -10,6 +11,25 @@ import (
 	"strings"
 	"time"
 )
+
+func Init() {
+	envFilePath1 := "../../.env"
+
+	// Load file .env pertama dari path yang berbeda
+	err := godotenv.Load(envFilePath1)
+	if err != nil {
+		log.Fatal("Error loading first .env file:", err)
+	}
+
+	// Ganti dengan path yang sesuai dengan lokasi file .env kedua Anda
+	envFilePath2 := ".env"
+
+	// Load file .env kedua dari path yang berbeda
+	err = godotenv.Load(envFilePath2)
+	if err != nil {
+		log.Fatal("Error loading second .env file:", err)
+	}
+}
 
 func GetMyIP() string {
 	myAddr := "unknown"
@@ -52,7 +72,7 @@ func WriteLog(msg string, level int) {
 	}
 
 	// Membuat file log
-	logFile, err := os.OpenFile("log/"+fileName+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("../../log/"+fileName+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,7 +98,7 @@ func WriteLog(msg string, level int) {
 
 func WriteErrorMap(filename string, msg interface{}) {
 	filename += ".json"
-	jsonFile, err := os.OpenFile("data/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	jsonFile, err := os.OpenFile("../../data/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,6 +110,38 @@ func WriteErrorMap(filename string, msg interface{}) {
 	encoder := json.NewEncoder(jsonFile)
 	err = encoder.Encode(msg)
 	if err != nil {
-		WriteLog(fmt.Sprintf("failed write to %s; error: %v", filename, err), LogLevelError)
+		WriteLog(fmt.Sprintf("failed write to data/%s; error: %v", filename, err), LogLevelError)
 	}
 }
+
+func WriteToFile(filename string, msg interface{}) {
+	var file *os.File
+	var err error
+
+	file, err = os.OpenFile("../../data/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		dir := "../data/"
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+		file, err = os.OpenFile(dir+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	defer file.Close()
+	_, err = file.WriteString(fmt.Sprintf("%s\n", msg))
+	if err != nil {
+		WriteLog(fmt.Sprintf("failed write to data/%s; error: %v", filename, err), LogLevelError)
+	}
+}
+
+const (
+	LayoutDate        = "2006-01-02"
+	LayoutTime        = "15:04:05"
+	LayoutDateTime    = "2006-01-02 15:04:05"
+	LayoutDateTimeDot = "2006-01-02 15.04.05"
+	LayoutTimestamp   = "2006-01-02 15:04:05.9999999999"
+	LayoutDateTimeH   = "2006-01-02 15"
+)
