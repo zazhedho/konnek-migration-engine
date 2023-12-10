@@ -10,13 +10,14 @@ func (PinRoom) TableName() string {
 }
 
 type PinRoom struct {
-	Id        uuid.UUID  `json:"id" gorm:"column:id"`
-	UserId    uuid.UUID  `json:"user_id" gorm:"column:user_id"`
-	RoomId    uuid.UUID  `json:"room_id" gorm:"column:room_id"`
-	CreatedAt time.Time  `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt time.Time  `json:"updated_at" gorm:"column:updated_at"`
-	DeletedAt *time.Time `json:"-" gorm:"column:deleted_at"`
-	Error     string     `json:"error" gorm:"-"`
+	Id         uuid.UUID   `json:"id" gorm:"column:id"`
+	UserId     uuid.UUID   `json:"user_id" gorm:"column:user_id"`
+	RoomId     uuid.UUID   `json:"room_id" gorm:"column:room_id"`
+	RoomDetail RoomDetails `json:"room_detail" gorm:"foreignKey:RoomId;AssociationForeignKey:Id;"`
+	CreatedAt  time.Time   `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt  time.Time   `json:"updated_at" gorm:"column:updated_at"`
+	DeletedAt  *time.Time  `json:"-" gorm:"column:deleted_at"`
+	Error      string      `json:"error" gorm:"-"`
 }
 
 func (PinRooms) TableName() string {
