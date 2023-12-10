@@ -39,6 +39,7 @@ type ChatMessage struct {
 	Id          uuid.UUID    `json:"id" gorm:"column:id"`
 	Message     string       `json:"message" gorm:"column:message"`
 	UserId      uuid.UUID    `json:"user_id" gorm:"column:user_id"`
+	User        UserCompany  `json:"user" gorm:"foreignKey:UserId;AssociationForeignKey:Id;"`
 	FromType    int          `json:"from_type" gorm:"column:from_type"`
 	RoomId      uuid.UUID    `json:"room_id" gorm:"column:room_id"`
 	ChatMedia   ChatMediaUrl `json:"chat_media" gorm:"foreignKey:ChatMessageId;AssociationForeignKey:Id;"`

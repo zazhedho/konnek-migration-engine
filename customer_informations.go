@@ -81,7 +81,11 @@ func main() {
 
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+			scDB = scDB.Preload("Customer.User", func(db *gorm.DB) *gorm.DB {
+				return scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+			})
+		} else {
+			scDB = scDB.Preload("Customer")
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
@@ -114,7 +118,7 @@ func main() {
 			scDB = scDB.Limit(limit)
 		}
 
-		if err := scDB.Preload("Customer").Find(&lists).Error; err != nil {
+		if err := scDB.Find(&lists).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 			return
 		}

@@ -79,7 +79,7 @@ func main() {
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
 			scDB = scDB.Preload("RoomDetail", func(db *gorm.DB) *gorm.DB {
-				return db.Where("company_id = ?", os.Getenv("COMPANYID"))
+				return scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
 			})
 		}
 
