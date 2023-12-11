@@ -50,7 +50,7 @@ func main() {
 	if os.Getenv("GET_FROM_FILE") != "" {
 		utils.WriteLog(fmt.Sprintf("%s get from file %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelDebug)
 		// Read the JSON file
-		fileContent, err := ioutil.ReadFile("data/" + os.Getenv("GET_FROM_FILE"))
+		fileContent, err := ioutil.ReadFile("../../data/" + os.Getenv("GET_FROM_FILE"))
 		if err != nil {
 			fmt.Printf("%s Error reading file: %v\n", logPrefix, err)
 			utils.WriteLog(fmt.Sprintf("%s Error reading file: %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelError)
@@ -68,7 +68,7 @@ func main() {
 		utils.WriteLog(fmt.Sprintf("%s [GET_FROM_FILE] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, len(comConfSc), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 		debugT = time.Now()
 
-		err = os.Remove("data/" + os.Getenv("GET_FROM_FILE"))
+		err = os.Remove("../../data/" + os.Getenv("GET_FROM_FILE"))
 		if err != nil {
 			utils.WriteLog(fmt.Sprintf("%s Error Delete file: %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelError)
 		}
