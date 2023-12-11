@@ -20,6 +20,7 @@ func main() {
 	companyId, err := uuid.FromString(os.Getenv("COMPANYID"))
 	if err != nil {
 		utils.WriteLog(fmt.Sprintf("parse uuid companyId: %s error: %v", os.Getenv("COMPANYID"), err), utils.LogLevelError)
+		fmt.Println("parse uuid companyId; err: ", err)
 		return
 	}
 
