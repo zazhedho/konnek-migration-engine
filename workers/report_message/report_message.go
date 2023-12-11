@@ -17,6 +17,8 @@ import (
 )
 
 func main() {
+	utils.Init()
+
 	db := utils.GetDBNewConnection()
 	defer func(db *gorm.DB) {
 		err := db.Close()

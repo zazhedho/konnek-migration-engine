@@ -17,6 +17,8 @@ import (
 )
 
 func main() {
+	utils.Init()
+
 	// Create source DB connection
 	scDB := utils.GetDBConnection()
 	defer func(scDB *gorm.DB) {

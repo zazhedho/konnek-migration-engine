@@ -19,6 +19,8 @@ import (
 )
 
 func main() {
+	utils.Init()
+
 	// Create destination DB connection
 	dstDB := utils.GetDBNewConnection()
 	defer func(dstDB *gorm.DB) {
