@@ -60,3 +60,7 @@ func (mg *mongoConversation) Store(coll string, doc Conversation) (Conversation,
 
 	return doc, nil
 }
+
+func (mg *mongoConversation) DeleteMany(coll string, filter bson.M) (*mongo.DeleteResult, error) {
+	return mg.MongoDb.Collection(coll).DeleteMany(context.TODO(), filter)
+}

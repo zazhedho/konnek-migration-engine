@@ -96,6 +96,24 @@ type ChatMessages struct {
 	RetryTime         *time.Time `json:"retry_time" gorm:"column:retry_time"`
 }
 
+type FetchConversation struct {
+	SeqId       int64      `json:"seq_id" gorm:"seq_id"`
+	RoomId      uuid.UUID  `json:"room_id" gorm:"column:room_id"`
+	SessionId   uuid.UUID  `json:"session_id" gorm:"column:session_id"`
+	Id          uuid.UUID  `json:"id" gorm:"column:id"`
+	UserId      uuid.UUID  `json:"user_id" gorm:"column:user_id"`
+	MessageId   string     `json:"message_id" gorm:"column:message_id"`
+	ReplyId     string     `json:"reply_id" gorm:"column:reply_id"`
+	FromType    string     `json:"from_type" gorm:"column:from_type"`
+	Type        string     `json:"type" gorm:"column:type"`
+	Text        string     `json:"text" gorm:"column:text"`
+	Payload     string     `json:"payload" gorm:"column:payload"`
+	Status      int        `json:"status" gorm:"column:status"`
+	MessageTime *time.Time `json:"message_time" gorm:"column:message_time"`
+	CreatedAt   time.Time  `json:"created_at" gorm:"column:created_at"`
+	CreatedBy   string     `json:"created_by" gorm:"column:created_by"`
+}
+
 type ButtonMessage struct {
 	Body   []Action      `json:"body"`
 	Header HeaderMessage `json:"header"`
