@@ -94,10 +94,10 @@ func GetDBReportConnection() *gorm.DB {
 	dbReportOnce.Do(func() {
 		WriteLog("Initialize db report connection...", LogLevelInfo)
 		connection := "host=" + os.Getenv("DATABASE_HOST_REPORT") + " port=" + os.Getenv("DATABASE_PORT_REPORT") + " user=" + DecryptCred("db-conn", os.Getenv("USERNAME_DB_REPORT")) + " dbname=" + os.Getenv("DATABASE_NAME_REPORT") +
-			" password=" + DecryptCred("db-conn", os.Getenv("PASSWORD_DB_REPORT")) + " sslmode=" + os.Getenv("DATABASE_SSL_REPORT")
+			" password=" + DecryptCred("db-conn", os.Getenv("PASSWORD_DB_REPORT")) + " sslmode=" + os.Getenv("DATABASE_SSL")
 
 		//WriteLog(connection, LogLevelInfo)
-		db, err := gorm.Open(os.Getenv("DATABASE_TYPE_REPORT"), connection)
+		db, err := gorm.Open(os.Getenv("DATABASE_TYPE"), connection)
 		if err != nil {
 			log.Fatalln(err)
 			return
