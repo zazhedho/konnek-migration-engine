@@ -78,6 +78,7 @@ func main() {
 		}
 	} else {
 		//Fetch the data from existing PSQL database
+		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
 			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
@@ -93,7 +94,7 @@ func main() {
 
 		if os.Getenv("ORDER_BY") != "" {
 			sortMap := map[string]string{
-				"created_at": "created_at",
+				os.Getenv("ORDER_BY"): "session_categories." + os.Getenv("ORDER_BY"),
 			}
 			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
