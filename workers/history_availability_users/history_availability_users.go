@@ -80,7 +80,7 @@ func main() {
 		}
 	} else {
 		//Fetch the database
-
+		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
 			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))

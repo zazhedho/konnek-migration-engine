@@ -87,7 +87,7 @@ func main() {
 		}
 	} else {
 		//Fetch the database
-
+		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
 			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))

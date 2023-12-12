@@ -82,8 +82,7 @@ func main() {
 			from employee_channels ec 
 			join employees e on ec.employee_id = e.id 
 			join users u on e.user_id = u.id 
-			join channels c on ec.channel_id = c.id 
-			where 1=1 and ec.deleted_at is null`
+			join channels c on ec.channel_id = c.id`
 
 		if os.Getenv("COMPANYID") != "" {
 			qry += fmt.Sprintf(" AND u.company_id = '%v'", os.Getenv("COMPANYID"))

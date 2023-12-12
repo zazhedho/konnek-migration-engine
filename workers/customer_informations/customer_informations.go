@@ -80,27 +80,23 @@ func main() {
 		}
 	} else {
 		//Fetch from database
-
+		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Preload("Customer.User", func(db *gorm.DB) *gorm.DB {
-				return scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
-			})
-		} else {
-			scDB = scDB.Preload("Customer")
+			scDB = scDB.Joins("JOIN customers ON additional_informations.customer_id = customers.id JOIN users ON users.id = customers.user_id").Where("users.company_id = ?", os.Getenv("COMPANYID"))
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			scDB = scDB.Where("additional_informations.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			scDB = scDB.Where("created_at >=?", os.Getenv("START_DATE"))
+			scDB = scDB.Where("additional_informations.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at <=?", os.Getenv("END_DATE"))
+			scDB = scDB.Where("additional_informations.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
 			sortMap := map[string]string{
-				"created_at": "created_at",
+				os.Getenv("ORDER_BY"): "additional_informations." + os.Getenv("ORDER_BY"),
 			}
 			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
@@ -120,7 +116,7 @@ func main() {
 			scDB = scDB.Limit(limit)
 		}
 
-		if err := scDB.Find(&lists).Error; err != nil {
+		if err := scDB.Preload("Customer").Find(&lists).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 			return
 		}
@@ -130,6 +126,8 @@ func main() {
 		utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 		debugT = time.Now()
 	}
+
+	return
 
 	//Insert into the new database
 	var errorMessages []models.AdditionalInformation

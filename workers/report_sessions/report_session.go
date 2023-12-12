@@ -78,27 +78,27 @@ func main() {
 		}
 	} else {
 		//Fetch from database
-
+		db = db.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
+			db = db.Joins("JOIN rooms ON sessions.room_id = rooms.id").Where("rooms.company_id = ?", os.Getenv("COMPANYID"))
+
 			db = db.Preload("Room", func(db *gorm.DB) *gorm.DB {
 				return db.Where("company_id = ?", os.Getenv("COMPANYID"))
 			})
-		} else {
-			db = db.Preload("Room")
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			db = db.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			db = db.Where("sessions.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			db = db.Where("created_at >=?", os.Getenv("START_DATE"))
+			db = db.Where("sessions.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			db = db.Where("created_at <=?", os.Getenv("END_DATE"))
+			db = db.Where("sessions.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
 			sortMap := map[string]string{
-				"created_at": "created_at",
+				os.Getenv("ORDER_BY"): "sessions." + os.Getenv("ORDER_BY"),
 			}
 			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 				db = db.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
@@ -118,7 +118,7 @@ func main() {
 			db = db.Limit(limit)
 		}
 
-		if err := db.Preload("Division").Preload("Agent").Find(&lists).Error; err != nil {
+		if err := db.Preload("Room").Preload("Division").Preload("Agent").Find(&lists).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 			return
 		}

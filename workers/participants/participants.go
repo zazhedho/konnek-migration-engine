@@ -80,25 +80,23 @@ func main() {
 		}
 	} else {
 		//Fetch the database
-
+		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Preload("User", func(db *gorm.DB) *gorm.DB {
-				return scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
-			})
+			scDB = scDB.Joins("JOIN users ON participants.user_id = users.id").Where("users.company_id = ?", os.Getenv("COMPANYID"))
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			scDB = scDB.Where("participants.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			scDB = scDB.Where("created_at >=?", os.Getenv("START_DATE"))
+			scDB = scDB.Where("participants.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at <=?", os.Getenv("END_DATE"))
+			scDB = scDB.Where("participants.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
 			sortMap := map[string]string{
-				"created_at": "created_at",
+				os.Getenv("ORDER_BY"): "participants." + os.Getenv("ORDER_BY"),
 			}
 			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
