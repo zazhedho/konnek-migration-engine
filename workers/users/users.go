@@ -87,7 +87,7 @@ func main() {
 
 		if os.Getenv("ROLES_ID") != "" {
 			idSlice := strings.Split(os.Getenv("ROLES_ID"), ",")
-			scDB = scDB.Where("roles_id IN ?", idSlice)
+			scDB = scDB.Where("roles_id IN (?)", idSlice)
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
