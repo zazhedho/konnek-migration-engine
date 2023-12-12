@@ -29,7 +29,6 @@ func main() {
 	}(scDB)
 
 	scDb2 := scDB
-	scDb2.Close()
 
 	// Create destination DB connection
 	dstDB := utils.GetDBNewConnection()
