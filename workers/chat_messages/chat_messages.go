@@ -81,7 +81,7 @@ func main() {
 		//Fetch the data from existing PSQL database
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Preload("User", func(db *gorm.DB) *gorm.DB {
+			scDB = scDB.Preload("Room", func(db *gorm.DB) *gorm.DB {
 				return scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
 			})
 		}
