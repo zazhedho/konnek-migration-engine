@@ -28,6 +28,9 @@ func main() {
 		}
 	}(scDB)
 
+	scDb2 := scDB
+	scDb2.Close()
+
 	// Create destination DB connection
 	dstDB := utils.GetDBNewConnection()
 	defer func(dstDB *gorm.DB) {
@@ -166,7 +169,7 @@ func main() {
 			}
 
 			var roomDetails RoomDetails
-			_ = scDB.Raw("SELECT id, channel_name FROM room_details WHERE customer_user_id = ? ", list.Id).Scan(&roomDetails).Error
+			_ = scDb2.Raw("SELECT id, channel_name FROM room_details WHERE customer_user_id = ? ", list.Id).Scan(&roomDetails).Error
 
 			customerChannel = roomDetails.ChannelName
 			name = list.Customer.Name
