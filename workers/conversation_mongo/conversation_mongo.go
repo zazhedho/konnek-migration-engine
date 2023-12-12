@@ -62,7 +62,7 @@ func main() {
 
 	//Set the filters
 	if os.Getenv("COMPANYID") != "" {
-		dstDB = dstDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+		dstDB = dstDB.Where("u.company_id = ?", os.Getenv("COMPANYID"))
 	}
 	if os.Getenv("ROOM_ID") != "" {
 		dstDB = dstDB.Where("cm.room_id = ?", os.Getenv("ROOM_ID"))
