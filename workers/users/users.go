@@ -166,7 +166,7 @@ func main() {
 			}
 
 			var roomDetails RoomDetails
-			_ = scDB.Where("customer_user_id = ? ", list.Id).Find(&roomDetails).Error
+			_ = scDB.Raw("SELECT id, channel_name FROM room_details WHERE customer_user_id = ? ", list.Id).Scan(&roomDetails).Error
 
 			customerChannel = roomDetails.ChannelName
 			name = list.Customer.Name
