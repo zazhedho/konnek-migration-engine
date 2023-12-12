@@ -155,7 +155,7 @@ func main() {
 		}
 
 		var m models.Roles
-		m.Id = list.Id
+		//m.Id = list.Id
 		m.Name = list.Name
 		m.IsAgent = isAgent
 		m.IsAdmin = isAdmin
