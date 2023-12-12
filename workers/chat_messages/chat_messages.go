@@ -79,24 +79,23 @@ func main() {
 		}
 	} else {
 		//Fetch the data from existing PSQL database
+		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Preload("Room", func(db *gorm.DB) *gorm.DB {
-				return scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
-			})
+			scDB = scDB.Joins("JOIN room_details ON chat_messages.room_id = room_details.id").Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			scDB = scDB.Where("chat_messages.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			scDB = scDB.Where("created_at >=?", os.Getenv("START_DATE"))
+			scDB = scDB.Where("chat_messages.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at <=?", os.Getenv("END_DATE"))
+			scDB = scDB.Where("chat_messages.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
 			sortMap := map[string]string{
-				"created_at": "created_at",
+				"created_at": "chat_messages.created_at",
 			}
 			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
