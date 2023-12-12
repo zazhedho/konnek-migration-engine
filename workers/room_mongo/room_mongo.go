@@ -98,7 +98,6 @@ func main() {
 		Joins("JOIN users cust ON cust.id = r.customer_user_id").
 		Joins("LEFT JOIN chat_messages cm ON cm.room_id = r.id").
 		Joins("LEFT JOIN users agent ON agent.id = s.agent_user_id").
-		Where("1 = ?", 1).
 		Find(&dataRooms)
 
 	debug++
