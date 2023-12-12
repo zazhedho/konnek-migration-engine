@@ -85,6 +85,11 @@ func main() {
 			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
 		}
 
+		if os.Getenv("ROLES_ID") != "" {
+			idSlice := strings.Split(os.Getenv("ROLES_ID"), ",")
+			scDB = scDB.Where("roles_id IN ?", idSlice)
+		}
+
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
 			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
