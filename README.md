@@ -1,0 +1,21 @@
+# Migrate data BY company_id
+
+- Table companies
+- Table Company Config
+- Table Channel Config -> + by channel_id=widget
+- Table roles
+- Table Chat Template
+- Table Tags
+- Table Division
+- Table session_categories
+- Table Users
+- Table Employee Channel
+- Table rooms (insert ke postgresql & Mongodb)
+- Table sessions
+- Table Participants
+- Table Chat Message (insert ke chat message,Report,Mongo)
+- Table Customer Information
+- Table Pin Rooms
+- Table Unavailable Reason
+- Table History Change Unavailable Reason
+- Table History Availability Agent (History Availability User)
