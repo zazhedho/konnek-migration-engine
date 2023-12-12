@@ -72,7 +72,7 @@ func main() {
 
 	if os.Getenv("ORDER_BY") != "" {
 		sortMap := map[string]string{
-			"created_at": "created_at",
+			os.Getenv("ORDER_BY"): "r." + os.Getenv("ORDER_BY"),
 		}
 		if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 			dstDB = dstDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
