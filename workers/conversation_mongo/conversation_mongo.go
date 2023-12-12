@@ -103,8 +103,7 @@ func main() {
 	var dataConversations []models.FetchConversation
 	dstDB.Select("cm.id, cm.seq_id, cm.room_id, cm.session_id, cm.user_id, cm.message_id, cm.reply_id, cm.from_type, cm.type, cm.text, cm.payload, cm.status, cm.message_time, cm.created_at, u.name AS created_by").
 		Table("chat_messages cm").
-		Joins("LEFT JOIN users u ON u.id = cm.user_id").
-		Where("1 = ?", 1).
+		Joins("JOIN users u ON u.id = cm.user_id").
 		Find(&dataConversations)
 
 	debug++
