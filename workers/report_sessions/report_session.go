@@ -169,7 +169,7 @@ func main() {
 		m.DivisionName = list.Division.Name
 		m.AgentUserId = list.AgentUserId
 		m.AgentUsername = list.Agent.Username
-		m.AgentName = list.Agent.Name
+		m.AgentName = strings.ReplaceAll(list.Agent.Name, "'", "''") // handle agent name with ('): Julia Sari Sa'diyah
 		m.Categories = list.Categories
 		m.BotStatus = list.BotStatus
 		m.Status = list.Status
