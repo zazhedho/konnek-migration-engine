@@ -59,6 +59,7 @@ func (ChatMediaUrl) TableName() string {
 }
 
 type ChatMediaUrl struct {
+	Id            uuid.UUID `json:"chat_media_id" gorm:"column:id"`
 	ChatMessageId uuid.UUID `json:"chat_message_id" gorm:"column:chat_message_id"`
 	Media         string    `json:"media" gorm:"column:media"`
 }

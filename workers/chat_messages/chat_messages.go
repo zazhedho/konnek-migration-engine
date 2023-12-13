@@ -128,10 +128,23 @@ func main() {
 	var errorDuplicates []models.ChatMessage
 	totalInserted := 0 //success insert
 	for _, dataChatMessageEx := range dataChatMessages {
+		var payload string
 		messageType := "text"
 		textMessage := ""
 		if dataChatMessageEx.ChatMedia.ChatMessageId != uuid.Nil { // image, doc, voice, video
 			messageType = getMediaType(dataChatMessageEx.ChatMedia.Media)
+			splitMessage := strings.Split(dataChatMessageEx.Message, " - ")
+			lengthMessage := len(splitMessage) - 1
+			size, _ := strconv.Atoi(strings.Trim(strings.TrimSpace(splitMessage[lengthMessage]), " KB"))
+			mediaMessage := models.MediaMessage{
+				Id:   dataChatMessageEx.ChatMedia.Id.String(),
+				Url:  dataChatMessageEx.ChatMedia.Media,
+				Name: dataChatMessageEx.Message,
+				Size: size,
+			}
+			imageMessageByte, _ := json.Marshal(mediaMessage)
+			payload = string(imageMessageByte)
+			textMessage = dataChatMessageEx.Message
 		} else {
 			if messageType == "text" {
 				textMessage = dataChatMessageEx.Message
@@ -142,7 +155,6 @@ func main() {
 		var payloadValDecode map[string]interface{}
 		var payloadLocation string
 		var payloadTemplate string
-		var payload string
 
 		if err := json.Unmarshal([]byte(dataChatMessageEx.Message), &payloadDecode); err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v", logPrefix, err), utils.LogLevelError)
