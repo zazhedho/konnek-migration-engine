@@ -127,8 +127,6 @@ func main() {
 		debugT = time.Now()
 	}
 
-	return
-
 	//Insert into the new database
 	var errorMessages []models.AdditionalInformation
 	var errorDuplicates []models.AdditionalInformation
