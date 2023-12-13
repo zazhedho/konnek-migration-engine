@@ -85,11 +85,11 @@ func main() {
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			scDB = scDB.Where("sessions.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			scDB = scDB.Where("created_at >=?", os.Getenv("START_DATE"))
+			scDB = scDB.Where("sessions.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("created_at <=?", os.Getenv("END_DATE"))
+			scDB = scDB.Where("sessions.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
