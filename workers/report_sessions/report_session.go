@@ -169,7 +169,7 @@ func main() {
 		m.DivisionName = list.Division.Name
 		m.AgentUserId = list.AgentUserId
 		m.AgentUsername = list.Agent.Username
-		m.AgentName = strings.ReplaceAll(list.Agent.Name, "'", "''") // handle agent name with ('): Julia Sari Sa'diyah
+		m.AgentName = list.Agent.Name
 		m.Categories = list.Categories
 		m.BotStatus = list.BotStatus
 		m.Status = list.Status
@@ -421,7 +421,7 @@ func main() {
 						fmt.Sprintf("'%s'", m.OpenTime.Format(utils.LayoutDate)),
 						fmt.Sprintf("'%s'", m.AgentUserId),
 						fmt.Sprintf("'%s'", m.AgentUsername),
-						fmt.Sprintf("'%s'", m.AgentName),
+						fmt.Sprintf("'%s'", strings.ReplaceAll(m.AgentName, "'", "''")), // handle agent name with ('): Julia Sari Sa'diyah
 						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
 						fmt.Sprintf("'%s'", "migration-engine"),
 					)
@@ -445,7 +445,7 @@ func main() {
 					vals := append(summaryVals,
 						fmt.Sprintf("'%s'", m.AgentUserId),
 						fmt.Sprintf("'%s'", m.AgentUsername),
-						fmt.Sprintf("'%s'", m.AgentName),
+						fmt.Sprintf("'%s'", strings.ReplaceAll(m.AgentName, "'", "''")), // handle agent name with ('): Julia Sari Sa'diyah
 						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
 						fmt.Sprintf("'%s'", "migration-engine"),
 					)
