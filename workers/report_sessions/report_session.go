@@ -79,21 +79,18 @@ func main() {
 	} else {
 		//Fetch from database
 		db = db.Unscoped()
+		db = db.Joins("JOIN rooms ON sessions.room_id = rooms.id")
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			db = db.Joins("JOIN rooms ON sessions.room_id = rooms.id").Where("rooms.company_id = ?", os.Getenv("COMPANYID"))
-
-			db = db.Preload("Room", func(db *gorm.DB) *gorm.DB {
-				return db.Where("company_id = ?", os.Getenv("COMPANYID"))
-			})
+			db = db.Where("rooms.company_id = ?", os.Getenv("COMPANYID"))
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			db = db.Where("sessions.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			db = db.Where("rooms.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			db = db.Where("sessions.created_at >=?", os.Getenv("START_DATE"))
+			db = db.Where("rooms.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			db = db.Where("sessions.created_at <=?", os.Getenv("END_DATE"))
+			db = db.Where("rooms.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
