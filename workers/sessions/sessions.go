@@ -80,16 +80,17 @@ func main() {
 		//Fetch the data from existing PSQL database
 		scDB = scDB.Unscoped()
 		//Set the filters
+		scDB = scDB.Joins("JOIN room_details ON sessions.room_id = room_details.id")
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Joins("JOIN room_details ON sessions.room_id = room_details.id").Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
+			scDB = scDB.Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("sessions.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+			scDB = scDB.Where("room_details.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
 		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
-			scDB = scDB.Where("sessions.created_at >=?", os.Getenv("START_DATE"))
+			scDB = scDB.Where("room_details.created_at >=?", os.Getenv("START_DATE"))
 		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
-			scDB = scDB.Where("sessions.created_at <=?", os.Getenv("END_DATE"))
+			scDB = scDB.Where("room_details.created_at <=?", os.Getenv("END_DATE"))
 		}
 
 		if os.Getenv("ORDER_BY") != "" {
