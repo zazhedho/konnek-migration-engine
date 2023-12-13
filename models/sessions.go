@@ -11,9 +11,9 @@ func (Session) TableName() string {
 }
 
 type Session struct {
-	Id                uuid.UUID     `json:"id" gorm:"column:id"`
-	RoomId            uuid.UUID     `json:"room_id" gorm:"column:room_id"`
-	RoomDetail        RoomDetails   `json:"room_detail" gorm:"foreignKey:RoomId;AssociationForeignKey:Id;"`
+	Id     uuid.UUID `json:"id" gorm:"column:id"`
+	RoomId uuid.UUID `json:"room_id" gorm:"column:room_id"`
+	//RoomDetail        RoomDetails   `json:"room_detail" gorm:"foreignKey:RoomId;AssociationForeignKey:Id;"`
 	ChatMessage       ChatMessageId `json:"chat_message" gorm:"foreignKey:SessionId;AssociationForeignKey:Id;"`
 	OpenBy            uuid.UUID     `json:"open_by" gorm:"column:open_by"`
 	CloseBy           uuid.UUID     `json:"close_by" gorm:"column:close_by"`
