@@ -36,7 +36,7 @@ func main() {
 	}(dbReport)
 
 	logID := uuid.NewV4()
-	appName := "report_message"
+	appName := "report_session"
 	if os.Getenv("APP_NAME") != "" {
 		appName = os.Getenv("APP_NAME")
 	}
