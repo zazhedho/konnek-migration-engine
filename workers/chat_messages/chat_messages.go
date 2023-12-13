@@ -79,7 +79,6 @@ func main() {
 		}
 	} else {
 		//Fetch the data from existing PSQL database
-		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
 			scDB = scDB.Joins("JOIN room_details ON chat_messages.room_id = room_details.id").Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
