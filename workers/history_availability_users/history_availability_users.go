@@ -38,7 +38,7 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	appName := "customer_informations"
+	appName := "history_availability_user"
 	if os.Getenv("APP_NAME") != "" {
 		appName = os.Getenv("APP_NAME")
 	}
