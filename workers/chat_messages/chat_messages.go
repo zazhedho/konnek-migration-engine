@@ -205,9 +205,13 @@ func main() {
 				var listMessage models.ListMessage
 
 				listMessage.Body.Title = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["body"].(map[string]interface{})["text"].(string)
-				listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
-				listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
-				listMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].([]interface{}) != nil {
+					listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
+					listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
+				}
+				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].([]interface{}) != nil {
+					listMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				}
 
 				payloadSection := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"].([]interface{})
 				var listSection []models.Section
@@ -281,9 +285,13 @@ func main() {
 				messageType = models.MessageTemplate
 
 				var templateMessage models.TemplateMessage
-				templateMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
-				templateMessage.Header.Type = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
-				templateMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].([]interface{}) != nil {
+					templateMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
+					templateMessage.Header.Type = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
+				}
+				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].([]interface{}) != nil {
+					templateMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				}
 				templateMessage.Body.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["body"].(map[string]interface{})["text"].(string)
 
 				templateMessageByte, _ := json.Marshal(templateMessage)
