@@ -368,7 +368,7 @@ func main() {
 					vals := append(summaryVals,
 						fmt.Sprintf("'%s'", list.OpenTime.Format(utils.LayoutDate)),
 						fmt.Sprintf("'%s'", list.Room.ChannelCode),
-						fmt.Sprintf("'%s'", list.Room.Customer.Id),
+						fmt.Sprintf("'%s'", list.Room.CustomerUserId),
 						fmt.Sprintf("'%s'", list.Room.Customer.Username),
 						fmt.Sprintf("'%s'", list.Room.Customer.Name),
 						fmt.Sprintf("'%s'", list.Room.Customer.Tags),
@@ -400,7 +400,7 @@ func main() {
 					fields := append(summaryFields, "channel", "customer_id", "customer_username", "customer_name", "customer_tags", "created_at", "created_by")
 					vals := append(summaryVals,
 						fmt.Sprintf("'%s'", list.Room.ChannelCode),
-						fmt.Sprintf("'%s'", list.Room.Customer.Id),
+						fmt.Sprintf("'%s'", list.Room.CustomerUserId),
 						fmt.Sprintf("'%s'", list.Room.Customer.Username),
 						fmt.Sprintf("'%s'", list.Room.Customer.Name),
 						fmt.Sprintf("'%s'", list.Room.Customer.Tags),
