@@ -130,13 +130,10 @@ func main() {
 	var errorMessages []models.FetchReportSession
 	var errorDuplicates []models.FetchReportSession
 	totalInserted := 0
+	reportSession, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("REPORT")))
+	summaryReport, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("SUMMARY")))
 
 	for _, list := range lists {
-		var m models.ReportSession
-		m.TablePrefix = list.Room.CompanyId.String() + "_"
-		//check table, create table if it doesn't exist
-		//dbReport.AutoMigrate(&m)
-
 		var waitingDuration int64
 		var frDuration int64
 		var resolveDuration int64
@@ -155,312 +152,144 @@ func main() {
 			sessionDuration = int64(list.OpenTime.Sub(*list.CloseTime).Seconds())
 		}
 
-		m.Id = list.Id
-		m.CompanyId = list.Room.CompanyId
-		m.CompanyName = list.Room.Company.Name
-		m.CompanyCode = list.Room.Company.Code
-		m.CustomerId = list.Room.Customer.Id
-		m.CustomerUsername = list.Room.Customer.Username
-		m.CustomerName = list.Room.Customer.Name
-		m.CustomerTags = list.Room.Customer.Tags
-		m.Channel = list.Room.ChannelCode
-		m.RoomId = list.RoomId
-		m.DivisionId = list.DivisionId
-		m.DivisionName = list.Division.Name
-		m.AgentUserId = list.AgentUserId
-		m.AgentUsername = list.Agent.Username
-		m.AgentName = list.Agent.Name
-		m.Categories = list.Categories
-		m.BotStatus = list.BotStatus
-		m.Status = list.Status
-		m.OpenTime = list.OpenTime
-		m.QueTime = list.QueTime
-		m.AssignTime = list.AssignTime
-		m.FrTime = list.FirstResponseTime
-		m.LrTime = list.LastAgentChatTime
-		m.CloseTime = list.CloseTime
-		m.WaitingDuration = waitingDuration
-		m.FrDuration = frDuration
-		m.ResolveDuration = resolveDuration
-		m.SessionDuration = sessionDuration
-		m.SlaFrom = list.SlaFrom
-		m.SlaTo = list.SlaTo
-		m.SlaThreshold = int64(list.SlaTreshold)
-		m.SlaDuration = int64(list.SlaDurations)
-		m.SlaStatus = list.SlaStatus
-		m.OpenBy = list.OpenBy
-		m.OpenUsername = list.UserOpenBy.Username
-		m.OpenName = list.UserOpenBy.Name
-		m.HandoverBy = list.HandoverBy
-		m.HandoverUsername = list.UserHandoverBy.Username
-		m.HandoverName = list.UserHandoverBy.Name
-		m.CloseBy = list.CloseBy
-		m.CloseUsername = list.UserCloseBy.Username
-		m.CloseName = list.UserCloseBy.Name
-		m.LastUpdate = time.Now()
-		m.CreatedAt = time.Now()
-		m.UpdatedAt = time.Now()
-		m.CreatedBy = "migration-engine"
-		m.UpdatedBy = "migration-engine"
+		if reportSession {
+			var m models.ReportSession
+			m.TablePrefix = list.Room.CompanyId.String() + "_"
+			//check table, create table if it doesn't exist
+			//dbReport.AutoMigrate(&m)
 
-		if err := dbReport.Create(&m).Error; err != nil {
-			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
-			list.Error = err.Error()
-			if errCode, ok := err.(*pq.Error); ok {
-				if errCode.Code == "23505" { //unique_violation
-					errorDuplicates = append(errorDuplicates, list)
-					continue
+			m.Id = list.Id
+			m.CompanyId = list.Room.CompanyId
+			m.CompanyName = list.Room.Company.Name
+			m.CompanyCode = list.Room.Company.Code
+			m.CustomerId = list.Room.Customer.Id
+			m.CustomerUsername = list.Room.Customer.Username
+			m.CustomerName = list.Room.Customer.Name
+			m.CustomerTags = list.Room.Customer.Tags
+			m.Channel = list.Room.ChannelCode
+			m.RoomId = list.RoomId
+			m.DivisionId = list.DivisionId
+			m.DivisionName = list.Division.Name
+			m.AgentUserId = list.AgentUserId
+			m.AgentUsername = list.Agent.Username
+			m.AgentName = list.Agent.Name
+			m.Categories = list.Categories
+			m.BotStatus = list.BotStatus
+			m.Status = list.Status
+			m.OpenTime = list.OpenTime
+			m.QueTime = list.QueTime
+			m.AssignTime = list.AssignTime
+			m.FrTime = list.FirstResponseTime
+			m.LrTime = list.LastAgentChatTime
+			m.CloseTime = list.CloseTime
+			m.WaitingDuration = waitingDuration
+			m.FrDuration = frDuration
+			m.ResolveDuration = resolveDuration
+			m.SessionDuration = sessionDuration
+			m.SlaFrom = list.SlaFrom
+			m.SlaTo = list.SlaTo
+			m.SlaThreshold = int64(list.SlaTreshold)
+			m.SlaDuration = int64(list.SlaDurations)
+			m.SlaStatus = list.SlaStatus
+			m.OpenBy = list.OpenBy
+			m.OpenUsername = list.UserOpenBy.Username
+			m.OpenName = list.UserOpenBy.Name
+			m.HandoverBy = list.HandoverBy
+			m.HandoverUsername = list.UserHandoverBy.Username
+			m.HandoverName = list.UserHandoverBy.Name
+			m.CloseBy = list.CloseBy
+			m.CloseUsername = list.UserCloseBy.Username
+			m.CloseName = list.UserCloseBy.Name
+			m.LastUpdate = time.Now()
+			m.CreatedAt = time.Now()
+			m.UpdatedAt = time.Now()
+			m.CreatedBy = "migration-engine"
+			m.UpdatedBy = "migration-engine"
+
+			if err := dbReport.Create(&m).Error; err != nil {
+				utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
+				list.Error = err.Error()
+				if errCode, ok := err.(*pq.Error); ok {
+					if errCode.Code == "23505" { //unique_violation
+						errorDuplicates = append(errorDuplicates, list)
+						continue
+					}
 				}
+				errorMessages = append(errorMessages, list)
+				continue
 			}
-			errorMessages = append(errorMessages, list)
-			continue
+			totalInserted++
 		}
-		totalInserted++
 
 		//summary report
-		updateSummary := make(map[string]interface{})
+		if summaryReport {
+			updateSummary := make(map[string]interface{})
 
-		updateSummary["last_update"] = m.LastUpdate.Format(time.RFC3339Nano)
-		updateSummary["updated_at"] = time.Now().Format(time.RFC3339Nano)
-		updateSummary["updated_by"] = "migration-engine"
-		switch m.Status {
-		case models.SessionOpen:
-			updateSummary["open"] = 1
-		case models.SessionWaiting:
-			updateSummary["waiting"] = 1
-		case models.SessionAssigned:
-			updateSummary["assigned"] = 1
-		case models.SessionHandovered:
-			updateSummary["handover"] = 1
-		case models.SessionClosed:
-			updateSummary["close"] = 1
-		}
-		updateSummary["total"] = 1
-
-		switch m.SlaStatus {
-		case models.SlaSuccess:
-			updateSummary["sla_success"] = 1
-		case models.SlaFailed:
-			updateSummary["sla_fail"] = 1
-		}
-
-		updateSummary["waiting_duration"] = m.WaitingDuration
-		updateSummary["fr_duration"] = m.FrDuration
-		updateSummary["resolve_duration"] = m.ResolveDuration
-		updateSummary["session_duration"] = m.SessionDuration
-
-		summarySets := make([]string, 0)
-		summaryFields := make([]string, 0)
-		summaryVals := make([]string, 0)
-		for k, v := range updateSummary {
-			summaryFields = append(summaryFields, k)
-
-			switch k {
-			case "last_update", "updated_at", "updated_by":
-				summarySets = append(summarySets, fmt.Sprintf("%s = '%s'", k, v))
-				summaryVals = append(summaryVals, fmt.Sprintf("'%s'", v))
-			default:
-				summarySets = append(summarySets, fmt.Sprintf("%s = %s+%d", k, k, v))
-				summaryVals = append(summaryVals, fmt.Sprintf("'%d'", v))
+			updateSummary["last_update"] = time.Now().Format(time.RFC3339Nano)
+			updateSummary["updated_at"] = time.Now().Format(time.RFC3339Nano)
+			updateSummary["updated_by"] = "migration-engine"
+			switch list.Status {
+			case models.SessionOpen:
+				updateSummary["open"] = 1
+			case models.SessionWaiting:
+				updateSummary["waiting"] = 1
+			case models.SessionAssigned:
+				updateSummary["assigned"] = 1
+			case models.SessionHandovered:
+				updateSummary["handover"] = 1
+			case models.SessionClosed:
+				updateSummary["close"] = 1
 			}
-		}
+			updateSummary["total"] = 1
 
-		//summary hourly per channel
-		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
-		retry:
-			qry := fmt.Sprintf(`UPDATE "%s_summary_hourly_perchannel" SET %s WHERE datetime = '%s' AND channel = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDateTimeH+":00"), m.Channel)
-			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
-				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-				utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-			} else if qryRes.RowsAffected == 0 {
-				fields := append(summaryFields, "datetime", "channel", "created_at", "created_by")
-				vals := append(summaryVals,
-					fmt.Sprintf("'%s'", m.OpenTime.Format(utils.LayoutDateTimeH+":00")),
-					fmt.Sprintf("'%s'", m.Channel),
-					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
-					fmt.Sprintf("'%s'", "migration-engine"),
-				)
-
-				qry = fmt.Sprintf(`INSERT INTO "%s_summary_hourly_perchannel" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
-				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
-					if errCode, ok := qryRes.Error.(*pq.Error); ok {
-						if errCode.Code == "23505" { //unique_violation (datetime, channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
-							goto retry
-						}
-					}
-					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-				}
-			}
-		}(logPrefix, summarySets, summaryFields, summaryVals)
-
-		//summary daily per channel
-		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
-		retry:
-			qry := fmt.Sprintf(`UPDATE "%s_summary_daily_perchannel" SET %s WHERE date = '%s' AND channel = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDate), m.Channel)
-			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
-				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-				utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-			} else if qryRes.RowsAffected == 0 {
-				fields := append(summaryFields, "date", "channel", "created_at", "created_by")
-				vals := append(summaryVals,
-					fmt.Sprintf("'%s'", m.OpenTime.Format(utils.LayoutDate)),
-					fmt.Sprintf("'%s'", m.Channel),
-					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
-					fmt.Sprintf("'%s'", "migration-engine"),
-				)
-
-				qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_perchannel" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
-				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
-					if errCode, ok := qryRes.Error.(*pq.Error); ok {
-						if errCode.Code == "23505" { //unique_violation (date, channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
-							goto retry
-						}
-					}
-					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-				}
-			}
-		}(logPrefix, summarySets, summaryFields, summaryVals)
-
-		//summary per channel
-		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
-		retry:
-			qry := fmt.Sprintf(`UPDATE "%s_summary_perchannel" SET %s WHERE channel = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.Channel)
-			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
-				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-				utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-			} else if qryRes.RowsAffected == 0 {
-				fields := append(summaryFields, "channel", "created_at", "created_by")
-				vals := append(summaryVals,
-					fmt.Sprintf("'%s'", m.Channel),
-					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
-					fmt.Sprintf("'%s'", "migration-engine"),
-				)
-
-				qry = fmt.Sprintf(`INSERT INTO "%s_summary_perchannel" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
-				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
-					if errCode, ok := qryRes.Error.(*pq.Error); ok {
-						if errCode.Code == "23505" { //unique_violation (channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
-							goto retry
-						}
-					}
-					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-				}
-			}
-		}(logPrefix, summarySets, summaryFields, summaryVals)
-
-		//summary daily per customer
-		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
-		retry:
-			qry := fmt.Sprintf(`UPDATE "%s_summary_daily_percustomer" SET %s WHERE date = '%s' AND customer_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDate), m.CustomerId)
-			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
-				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-				utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-			} else if qryRes.RowsAffected == 0 {
-				fields := append(summaryFields, "date", "channel", "customer_id", "customer_username", "customer_name", "customer_tags", "created_at", "created_by")
-				vals := append(summaryVals,
-					fmt.Sprintf("'%s'", m.OpenTime.Format(utils.LayoutDate)),
-					fmt.Sprintf("'%s'", m.Channel),
-					fmt.Sprintf("'%s'", m.CustomerId),
-					fmt.Sprintf("'%s'", m.CustomerUsername),
-					fmt.Sprintf("'%s'", m.CustomerName),
-					fmt.Sprintf("'%s'", m.CustomerTags),
-					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
-					fmt.Sprintf("'%s'", "migration-engine"),
-				)
-
-				qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_percustomer" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
-				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
-					if errCode, ok := qryRes.Error.(*pq.Error); ok {
-						if errCode.Code == "23505" { //unique_violation (date, customer_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
-							goto retry
-						}
-					}
-					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-				}
-			}
-		}(logPrefix, summarySets, summaryFields, summaryVals)
-
-		//summary per customer
-		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
-		retry:
-			qry := fmt.Sprintf(`UPDATE "%s_summary_percustomer" SET %s WHERE customer_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.CustomerId)
-			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
-				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-				utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-			} else if qryRes.RowsAffected == 0 {
-				fields := append(summaryFields, "channel", "customer_id", "customer_username", "customer_name", "customer_tags", "created_at", "created_by")
-				vals := append(summaryVals,
-					fmt.Sprintf("'%s'", m.Channel),
-					fmt.Sprintf("'%s'", m.CustomerId),
-					fmt.Sprintf("'%s'", m.CustomerUsername),
-					fmt.Sprintf("'%s'", m.CustomerName),
-					fmt.Sprintf("'%s'", m.CustomerTags),
-					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
-					fmt.Sprintf("'%s'", "migration-engine"),
-				)
-
-				qry = fmt.Sprintf(`INSERT INTO "%s_summary_percustomer" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
-				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
-					if errCode, ok := qryRes.Error.(*pq.Error); ok {
-						if errCode.Code == "23505" { //unique_violation (customer_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
-							goto retry
-						}
-					}
-					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
-					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
-				}
-			}
-		}(logPrefix, summarySets, summaryFields, summaryVals)
-
-		if m.AgentUserId != uuid.Nil {
-			summaryAgentSets := make([]string, 0)
-			summaryAgentFields := make([]string, 0)
-			summaryAgentVals := make([]string, 0)
-			_, totalIsSet := updateSummary["total"]
-
-			//remove open/waiting (asumsi agent tidak akan memiliki room open/waiting)
-			for j := 0; j < len(summaryFields); j++ {
-				if summaryFields[j] == "open" || summaryFields[j] == "waiting" {
-					continue
-				}
-
-				if !totalIsSet && summaryFields[j] == "assigned" && summaryVals[j] == "'1'" {
-					summaryAgentSets = append(summaryAgentSets, "total=total+1")
-					summaryAgentFields = append(summaryAgentFields, "total")
-					summaryAgentVals = append(summaryAgentVals, "1")
-				}
-
-				summaryAgentSets = append(summaryAgentSets, summarySets[j])
-				summaryAgentFields = append(summaryAgentFields, summaryFields[j])
-				summaryAgentVals = append(summaryAgentVals, summaryVals[j])
+			switch list.SlaStatus {
+			case models.SlaSuccess:
+				updateSummary["sla_success"] = 1
+			case models.SlaFailed:
+				updateSummary["sla_fail"] = 1
 			}
 
-			//summary daily per agent
+			updateSummary["waiting_duration"] = waitingDuration
+			updateSummary["fr_duration"] = frDuration
+			updateSummary["resolve_duration"] = resolveDuration
+			updateSummary["session_duration"] = sessionDuration
+
+			summarySets := make([]string, 0)
+			summaryFields := make([]string, 0)
+			summaryVals := make([]string, 0)
+			for k, v := range updateSummary {
+				summaryFields = append(summaryFields, k)
+
+				switch k {
+				case "last_update", "updated_at", "updated_by":
+					summarySets = append(summarySets, fmt.Sprintf("%s = '%s'", k, v))
+					summaryVals = append(summaryVals, fmt.Sprintf("'%s'", v))
+				default:
+					summarySets = append(summarySets, fmt.Sprintf("%s = %s+%d", k, k, v))
+					summaryVals = append(summaryVals, fmt.Sprintf("'%d'", v))
+				}
+			}
+
+			//summary hourly per channel
 			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
 			retry:
-				qry := fmt.Sprintf(`UPDATE "%s_summary_daily_peragent" SET %s WHERE date = '%s' AND agent_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDate), m.AgentUserId)
+				qry := fmt.Sprintf(`UPDATE "%s_summary_hourly_perchannel" SET %s WHERE datetime = '%s' AND channel = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.OpenTime.Format(utils.LayoutDateTimeH+":00"), list.Room.ChannelCode)
 				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				} else if qryRes.RowsAffected == 0 {
-					fields := append(summaryFields, "date", "agent_id", "agent_username", "agent_name", "created_at", "created_by")
+					fields := append(summaryFields, "datetime", "channel", "created_at", "created_by")
 					vals := append(summaryVals,
-						fmt.Sprintf("'%s'", m.OpenTime.Format(utils.LayoutDate)),
-						fmt.Sprintf("'%s'", m.AgentUserId),
-						fmt.Sprintf("'%s'", m.AgentUsername),
-						fmt.Sprintf("'%s'", strings.ReplaceAll(m.AgentName, "'", "''")), // handle agent name with ('): Julia Sari Sa'diyah
+						fmt.Sprintf("'%s'", list.OpenTime.Format(utils.LayoutDateTimeH+":00")),
+						fmt.Sprintf("'%s'", list.Room.ChannelCode),
 						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
 						fmt.Sprintf("'%s'", "migration-engine"),
 					)
 
-					qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_peragent" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+					qry = fmt.Sprintf(`INSERT INTO "%s_summary_hourly_perchannel" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
 						if errCode, ok := qryRes.Error.(*pq.Error); ok {
-							if errCode.Code == "23505" { //unique_violation (date, agent_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							if errCode.Code == "23505" { //unique_violation (datetime, channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
 								goto retry
 							}
 						}
@@ -468,29 +297,28 @@ func main() {
 						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 					}
 				}
-			}(logPrefix, summaryAgentSets, summaryAgentFields, summaryAgentVals)
+			}(logPrefix, summarySets, summaryFields, summaryVals)
 
-			//summary per agent
+			//summary daily per channel
 			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
 			retry:
-				qry := fmt.Sprintf(`UPDATE "%s_summary_peragent" SET %s WHERE agent_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.AgentUserId)
+				qry := fmt.Sprintf(`UPDATE "%s_summary_daily_perchannel" SET %s WHERE date = '%s' AND channel = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.OpenTime.Format(utils.LayoutDate), list.Room.ChannelCode)
 				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				} else if qryRes.RowsAffected == 0 {
-					fields := append(summaryFields, "agent_id", "agent_username", "agent_name", "created_at", "created_by")
+					fields := append(summaryFields, "date", "channel", "created_at", "created_by")
 					vals := append(summaryVals,
-						fmt.Sprintf("'%s'", m.AgentUserId),
-						fmt.Sprintf("'%s'", m.AgentUsername),
-						fmt.Sprintf("'%s'", strings.ReplaceAll(m.AgentName, "'", "''")), // handle agent name with ('): Julia Sari Sa'diyah
+						fmt.Sprintf("'%s'", list.OpenTime.Format(utils.LayoutDate)),
+						fmt.Sprintf("'%s'", list.Room.ChannelCode),
 						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
 						fmt.Sprintf("'%s'", "migration-engine"),
 					)
 
-					qry = fmt.Sprintf(`INSERT INTO "%s_summary_peragent" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+					qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_perchannel" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
 						if errCode, ok := qryRes.Error.(*pq.Error); ok {
-							if errCode.Code == "23505" { //unique_violation (agent_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							if errCode.Code == "23505" { //unique_violation (date, channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
 								goto retry
 							}
 						}
@@ -498,7 +326,185 @@ func main() {
 						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 					}
 				}
-			}(logPrefix, summaryAgentSets, summaryAgentFields, summaryAgentVals)
+			}(logPrefix, summarySets, summaryFields, summaryVals)
+
+			//summary per channel
+			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+			retry:
+				qry := fmt.Sprintf(`UPDATE "%s_summary_perchannel" SET %s WHERE channel = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.Room.ChannelCode)
+				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
+					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+				} else if qryRes.RowsAffected == 0 {
+					fields := append(summaryFields, "channel", "created_at", "created_by")
+					vals := append(summaryVals,
+						fmt.Sprintf("'%s'", list.Room.ChannelCode),
+						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
+						fmt.Sprintf("'%s'", "migration-engine"),
+					)
+
+					qry = fmt.Sprintf(`INSERT INTO "%s_summary_perchannel" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+						if errCode, ok := qryRes.Error.(*pq.Error); ok {
+							if errCode.Code == "23505" { //unique_violation (channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+								goto retry
+							}
+						}
+						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+					}
+				}
+			}(logPrefix, summarySets, summaryFields, summaryVals)
+
+			//summary daily per customer
+			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+			retry:
+				qry := fmt.Sprintf(`UPDATE "%s_summary_daily_percustomer" SET %s WHERE date = '%s' AND customer_id = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.OpenTime.Format(utils.LayoutDate), list.Room.Customer.Id)
+				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
+					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+				} else if qryRes.RowsAffected == 0 {
+					fields := append(summaryFields, "date", "channel", "customer_id", "customer_username", "customer_name", "customer_tags", "created_at", "created_by")
+					vals := append(summaryVals,
+						fmt.Sprintf("'%s'", list.OpenTime.Format(utils.LayoutDate)),
+						fmt.Sprintf("'%s'", list.Room.ChannelCode),
+						fmt.Sprintf("'%s'", list.Room.Customer.Id),
+						fmt.Sprintf("'%s'", list.Room.Customer.Username),
+						fmt.Sprintf("'%s'", list.Room.Customer.Name),
+						fmt.Sprintf("'%s'", list.Room.Customer.Tags),
+						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
+						fmt.Sprintf("'%s'", "migration-engine"),
+					)
+
+					qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_percustomer" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+						if errCode, ok := qryRes.Error.(*pq.Error); ok {
+							if errCode.Code == "23505" { //unique_violation (date, customer_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+								goto retry
+							}
+						}
+						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+					}
+				}
+			}(logPrefix, summarySets, summaryFields, summaryVals)
+
+			//summary per customer
+			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+			retry:
+				qry := fmt.Sprintf(`UPDATE "%s_summary_percustomer" SET %s WHERE customer_id = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.Room.Customer.Id)
+				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
+					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+				} else if qryRes.RowsAffected == 0 {
+					fields := append(summaryFields, "channel", "customer_id", "customer_username", "customer_name", "customer_tags", "created_at", "created_by")
+					vals := append(summaryVals,
+						fmt.Sprintf("'%s'", list.Room.ChannelCode),
+						fmt.Sprintf("'%s'", list.Room.Customer.Id),
+						fmt.Sprintf("'%s'", list.Room.Customer.Username),
+						fmt.Sprintf("'%s'", list.Room.Customer.Name),
+						fmt.Sprintf("'%s'", list.Room.Customer.Tags),
+						fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
+						fmt.Sprintf("'%s'", "migration-engine"),
+					)
+
+					qry = fmt.Sprintf(`INSERT INTO "%s_summary_percustomer" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+						if errCode, ok := qryRes.Error.(*pq.Error); ok {
+							if errCode.Code == "23505" { //unique_violation (customer_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+								goto retry
+							}
+						}
+						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+					}
+				}
+			}(logPrefix, summarySets, summaryFields, summaryVals)
+
+			if list.AgentUserId != uuid.Nil {
+				summaryAgentSets := make([]string, 0)
+				summaryAgentFields := make([]string, 0)
+				summaryAgentVals := make([]string, 0)
+				_, totalIsSet := updateSummary["total"]
+
+				//remove open/waiting (asumsi agent tidak akan memiliki room open/waiting)
+				for j := 0; j < len(summaryFields); j++ {
+					if summaryFields[j] == "open" || summaryFields[j] == "waiting" {
+						continue
+					}
+
+					if !totalIsSet && summaryFields[j] == "assigned" && summaryVals[j] == "'1'" {
+						summaryAgentSets = append(summaryAgentSets, "total=total+1")
+						summaryAgentFields = append(summaryAgentFields, "total")
+						summaryAgentVals = append(summaryAgentVals, "1")
+					}
+
+					summaryAgentSets = append(summaryAgentSets, summarySets[j])
+					summaryAgentFields = append(summaryAgentFields, summaryFields[j])
+					summaryAgentVals = append(summaryAgentVals, summaryVals[j])
+				}
+
+				//summary daily per agent
+				go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+				retry:
+					qry := fmt.Sprintf(`UPDATE "%s_summary_daily_peragent" SET %s WHERE date = '%s' AND agent_id = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.OpenTime.Format(utils.LayoutDate), list.AgentUserId)
+					if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
+						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+					} else if qryRes.RowsAffected == 0 {
+						fields := append(summaryFields, "date", "agent_id", "agent_username", "agent_name", "created_at", "created_by")
+						vals := append(summaryVals,
+							fmt.Sprintf("'%s'", list.OpenTime.Format(utils.LayoutDate)),
+							fmt.Sprintf("'%s'", list.AgentUserId),
+							fmt.Sprintf("'%s'", list.Agent.Username),
+							fmt.Sprintf("'%s'", strings.ReplaceAll(list.Agent.Name, "'", "''")), // handle agent name with ('): Julia Sari Sa'diyah
+							fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
+							fmt.Sprintf("'%s'", "migration-engine"),
+						)
+
+						qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_peragent" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+						if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+							if errCode, ok := qryRes.Error.(*pq.Error); ok {
+								if errCode.Code == "23505" { //unique_violation (date, agent_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+									goto retry
+								}
+							}
+							utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+							utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+						}
+					}
+				}(logPrefix, summaryAgentSets, summaryAgentFields, summaryAgentVals)
+
+				//summary per agent
+				go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+				retry:
+					qry := fmt.Sprintf(`UPDATE "%s_summary_peragent" SET %s WHERE agent_id = '%s';`, list.Room.CompanyId, strings.Join(summarySets, ", "), list.AgentUserId)
+					if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
+						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+					} else if qryRes.RowsAffected == 0 {
+						fields := append(summaryFields, "agent_id", "agent_username", "agent_name", "created_at", "created_by")
+						vals := append(summaryVals,
+							fmt.Sprintf("'%s'", list.AgentUserId),
+							fmt.Sprintf("'%s'", list.Agent.Username),
+							fmt.Sprintf("'%s'", strings.ReplaceAll(list.Agent.Name, "'", "''")), // handle agent name with ('): Julia Sari Sa'diyah
+							fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
+							fmt.Sprintf("'%s'", "migration-engine"),
+						)
+
+						qry = fmt.Sprintf(`INSERT INTO "%s_summary_peragent" (%s) VALUES (%s);`, list.Room.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
+						if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+							if errCode, ok := qryRes.Error.(*pq.Error); ok {
+								if errCode.Code == "23505" { //unique_violation (agent_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+									goto retry
+								}
+							}
+							utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
+							utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
+						}
+					}
+				}(logPrefix, summaryAgentSets, summaryAgentFields, summaryAgentVals)
+			}
 		}
 	}
 	debug++
