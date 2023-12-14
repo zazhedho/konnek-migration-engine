@@ -101,10 +101,14 @@ func main() {
 
 	// Query data dari new PSQL database untuk di store ke mongoDB
 	var dataConversations []models.FetchConversation
-	dstDB.Select("cm.id, cm.seq_id, cm.room_id, cm.session_id, cm.user_id, cm.message_id, cm.reply_id, cm.from_type, cm.type, cm.text, cm.payload, cm.status, cm.message_time, cm.created_at, u.name AS created_by").
+	err = dstDB.Select("cm.id, cm.seq_id, cm.room_id, cm.session_id, cm.user_id, cm.message_id, cm.reply_id, cm.from_type, cm.type, cm.text, cm.payload, cm.status, cm.message_time, cm.created_at, u.name AS created_by").
 		Table("chat_messages cm").
 		Joins("JOIN users u ON u.id = cm.user_id").
-		Find(&dataConversations)
+		Find(&dataConversations).Error
+	if err != nil {
+		utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+		return
+	}
 
 	debug++
 	logPrefix += "[dstDB]"

@@ -118,6 +118,7 @@ func main() {
 			return db.Order("chat_messages.created_at DESC")
 		}).Find(&dataSessions).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+			return
 		}
 		totalFetch := len(dataSessions)
 

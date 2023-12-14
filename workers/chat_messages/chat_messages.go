@@ -115,6 +115,7 @@ func main() {
 		// query data dari source PSQL DB
 		if err := scDB.Preload("ChatMedia").Find(&dataChatMessages).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+			return
 		}
 		totalFetch := len(dataChatMessages)
 

@@ -92,13 +92,17 @@ func main() {
 
 	// Query data dari new PSQL database untuk di store ke mongoDB
 	var dataRooms []models.FetchRoom
-	dstDB.Select("r.company_id, r.channel_code, r.customer_user_id, r.id, s.id AS session_id, s.seq_id, s.division_id, s.agent_user_id, s.last_chat_message_id, s.categories, s.bot_status, s.status, s.open_time, s.queue_time, s.assign_time, s.first_response_time, s.last_agent_chat_time, s.close_time, cm.message_id, cm.reply_id AS message_reply_id, cm.from_type AS message_from_type, cm.type AS message_type, cm.text AS message_text, cm.payload AS message_payload, cm.status AS message_status, cm.message_time, cm.created_at AS message_created_at, cm.id AS chat_message_id, cm.seq_id AS conversation_seq_id, cust.name AS customer_name, cust.username AS customer_username, agent.name AS agent_name, agent.username AS agent_username").
+	err = dstDB.Select("r.company_id, r.channel_code, r.customer_user_id, r.id, s.id AS session_id, s.seq_id, s.division_id, s.agent_user_id, s.last_chat_message_id, s.categories, s.bot_status, s.status, s.open_time, s.queue_time, s.assign_time, s.first_response_time, s.last_agent_chat_time, s.close_time, cm.message_id, cm.reply_id AS message_reply_id, cm.from_type AS message_from_type, cm.type AS message_type, cm.text AS message_text, cm.payload AS message_payload, cm.status AS message_status, cm.message_time, cm.created_at AS message_created_at, cm.id AS chat_message_id, cm.seq_id AS conversation_seq_id, cust.name AS customer_name, cust.username AS customer_username, agent.name AS agent_name, agent.username AS agent_username").
 		Table("rooms r").
 		Joins("JOIN sessions s ON s.id = r.last_session_id").
 		Joins("JOIN users cust ON cust.id = r.customer_user_id").
 		Joins("LEFT JOIN chat_messages cm ON cm.room_id = r.id").
 		Joins("LEFT JOIN users agent ON agent.id = s.agent_user_id").
-		Find(&dataRooms)
+		Find(&dataRooms).Error
+	if err != nil {
+		utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+		return
+	}
 
 	debug++
 	logPrefix += "[dstDB]"
