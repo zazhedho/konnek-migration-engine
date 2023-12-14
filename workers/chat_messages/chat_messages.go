@@ -234,8 +234,8 @@ func main() {
 					for _, button := range payloadSection {
 						actions = []models.Action{}
 						actions = append(actions, models.Action{
-							Key:   button.(map[string]interface{})["id"].(string),
-							Title: button.(map[string]interface{})["title"].(string),
+							Key:   button.(map[string]interface{})["reply"].(map[string]interface{})["id"].(string),
+							Title: button.(map[string]interface{})["reply"].(map[string]interface{})["title"].(string),
 						})
 					}
 					listSection = append(listSection, models.Section{
