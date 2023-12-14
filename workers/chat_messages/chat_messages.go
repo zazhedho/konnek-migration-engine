@@ -158,7 +158,7 @@ func main() {
 		var payloadTemplate string
 
 		if err := json.Unmarshal([]byte(dataChatMessageEx.Message), &payloadDecode); err != nil {
-			utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v; data: %v", logPrefix, err, payloadDecode), utils.LogLevelError)
+			utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v; data: %v", logPrefix, err, dataChatMessageEx.Message), utils.LogLevelError)
 		} else {
 			if v, ok := payloadDecode["payload"]; ok {
 				switch v.(type) {
