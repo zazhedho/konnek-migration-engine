@@ -133,11 +133,11 @@ func main() {
 	totalInserted := 0 //success insert
 	for _, dataSession := range dataSessions {
 		status := 0
-		if dataSession.QueTime.IsZero() {
+		if dataSession.QueTime.IsZero() && dataSession.CloseTime.IsZero() {
 			status = 0 //Open
-		} else if !dataSession.QueTime.IsZero() && dataSession.AgentUserId == uuid.Nil {
+		} else if !dataSession.QueTime.IsZero() && dataSession.AgentUserId == uuid.Nil && dataSession.CloseTime.IsZero() {
 			status = 1 //Waiting
-		} else if dataSession.AgentUserId != uuid.Nil && !dataSession.AssignTime.IsZero() {
+		} else if dataSession.AgentUserId != uuid.Nil && !dataSession.AssignTime.IsZero() && dataSession.CloseTime.IsZero() {
 			status = 2 //Assigned
 		} else if !dataSession.CloseTime.IsZero() {
 			status = -1 //Closed
