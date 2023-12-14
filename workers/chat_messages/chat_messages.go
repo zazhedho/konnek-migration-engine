@@ -205,29 +205,44 @@ func main() {
 				var listMessage models.ListMessage
 
 				listMessage.Body.Title = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["body"].(map[string]interface{})["text"].(string)
-				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"] != nil {
-					listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
-					listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
+				if v, ok := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"]; ok {
+					listMessage.Header.Text = v.(map[string]interface{})["text"].(string)
+					listMessage.Header.Text = v.(map[string]interface{})["type"].(string)
 				}
-				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"] != nil {
-					listMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				if v, ok := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"]; ok {
+					listMessage.Footer.Text = v.(map[string]interface{})["text"].(string)
 				}
-
-				payloadSection := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"].([]interface{})
 				var listSection []models.Section
-				for _, section := range payloadSection {
-					actions = []models.Action{}
-					for _, row := range section.(map[string]interface{})["rows"].([]interface{}) {
+				var payloadSection []interface{}
+				if v, ok := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"]; ok {
+					payloadSection = v.([]interface{})
+					for _, section := range payloadSection {
+						actions = []models.Action{}
+						for _, row := range section.(map[string]interface{})["rows"].([]interface{}) {
+							actions = append(actions, models.Action{
+								Description: row.(map[string]interface{})["description"].(string),
+								Key:         row.(map[string]interface{})["id"].(string),
+								Title:       row.(map[string]interface{})["title"].(string),
+							})
+						}
+						listSection = append(listSection, models.Section{
+							Actions: actions,
+						})
+					}
+				} else if v, ok = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["buttons"]; ok {
+					payloadSection = v.([]interface{})
+					for _, button := range payloadSection {
+						actions = []models.Action{}
 						actions = append(actions, models.Action{
-							Description: row.(map[string]interface{})["description"].(string),
-							Key:         row.(map[string]interface{})["id"].(string),
-							Title:       row.(map[string]interface{})["title"].(string),
+							Key:   button.(map[string]interface{})["id"].(string),
+							Title: button.(map[string]interface{})["title"].(string),
 						})
 					}
 					listSection = append(listSection, models.Section{
 						Actions: actions,
 					})
 				}
+
 				listMessage.Body.Sections = listSection
 				listMessageByte, _ := json.Marshal(listMessage)
 				payload = string(listMessageByte)
