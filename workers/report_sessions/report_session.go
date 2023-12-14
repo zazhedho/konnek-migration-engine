@@ -267,6 +267,7 @@ func main() {
 
 		//summary hourly per channel
 		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+		retry:
 			qry := fmt.Sprintf(`UPDATE "%s_summary_hourly_perchannel" SET %s WHERE datetime = '%s' AND channel = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDateTimeH+":00"), m.Channel)
 			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -282,6 +283,11 @@ func main() {
 
 				qry = fmt.Sprintf(`INSERT INTO "%s_summary_hourly_perchannel" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+					if errCode, ok := qryRes.Error.(*pq.Error); ok {
+						if errCode.Code == "23505" { //unique_violation (datetime, channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							goto retry
+						}
+					}
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				}
@@ -290,6 +296,7 @@ func main() {
 
 		//summary daily per channel
 		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+		retry:
 			qry := fmt.Sprintf(`UPDATE "%s_summary_daily_perchannel" SET %s WHERE date = '%s' AND channel = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDate), m.Channel)
 			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -305,6 +312,11 @@ func main() {
 
 				qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_perchannel" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+					if errCode, ok := qryRes.Error.(*pq.Error); ok {
+						if errCode.Code == "23505" { //unique_violation (date, channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							goto retry
+						}
+					}
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				}
@@ -313,6 +325,7 @@ func main() {
 
 		//summary per channel
 		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+		retry:
 			qry := fmt.Sprintf(`UPDATE "%s_summary_perchannel" SET %s WHERE channel = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.Channel)
 			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -327,6 +340,11 @@ func main() {
 
 				qry = fmt.Sprintf(`INSERT INTO "%s_summary_perchannel" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+					if errCode, ok := qryRes.Error.(*pq.Error); ok {
+						if errCode.Code == "23505" { //unique_violation (channel) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							goto retry
+						}
+					}
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				}
@@ -335,6 +353,7 @@ func main() {
 
 		//summary daily per customer
 		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+		retry:
 			qry := fmt.Sprintf(`UPDATE "%s_summary_daily_percustomer" SET %s WHERE date = '%s' AND customer_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDate), m.CustomerId)
 			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -354,6 +373,11 @@ func main() {
 
 				qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_percustomer" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+					if errCode, ok := qryRes.Error.(*pq.Error); ok {
+						if errCode.Code == "23505" { //unique_violation (date, customer_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							goto retry
+						}
+					}
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				}
@@ -362,6 +386,7 @@ func main() {
 
 		//summary per customer
 		go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+		retry:
 			qry := fmt.Sprintf(`UPDATE "%s_summary_percustomer" SET %s WHERE customer_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.CustomerId)
 			if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 				utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -380,6 +405,11 @@ func main() {
 
 				qry = fmt.Sprintf(`INSERT INTO "%s_summary_percustomer" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 				if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+					if errCode, ok := qryRes.Error.(*pq.Error); ok {
+						if errCode.Code == "23505" { //unique_violation (customer_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+							goto retry
+						}
+					}
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 					utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 				}
@@ -411,6 +441,7 @@ func main() {
 
 			//summary daily per agent
 			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+			retry:
 				qry := fmt.Sprintf(`UPDATE "%s_summary_daily_peragent" SET %s WHERE date = '%s' AND agent_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.OpenTime.Format(utils.LayoutDate), m.AgentUserId)
 				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -428,6 +459,11 @@ func main() {
 
 					qry = fmt.Sprintf(`INSERT INTO "%s_summary_daily_peragent" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+						if errCode, ok := qryRes.Error.(*pq.Error); ok {
+							if errCode.Code == "23505" { //unique_violation (date, agent_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+								goto retry
+							}
+						}
 						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 					}
@@ -436,6 +472,7 @@ func main() {
 
 			//summary per agent
 			go func(logPrefix string, summarySets, summaryFields, summaryVals []string) {
+			retry:
 				qry := fmt.Sprintf(`UPDATE "%s_summary_peragent" SET %s WHERE agent_id = '%s';`, m.CompanyId, strings.Join(summarySets, ", "), m.AgentUserId)
 				if qryRes := dbReport.Exec(qry); qryRes.Error != nil {
 					utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
@@ -452,6 +489,11 @@ func main() {
 
 					qry = fmt.Sprintf(`INSERT INTO "%s_summary_peragent" (%s) VALUES (%s);`, m.CompanyId, strings.Join(fields, ", "), strings.Join(vals, ", "))
 					if qryRes = dbReport.Exec(qry); qryRes.Error != nil {
+						if errCode, ok := qryRes.Error.(*pq.Error); ok {
+							if errCode.Code == "23505" { //unique_violation (agent_id) bisa jadi error duplicate karna bersamaan insert dengan loop sebelumnya karna asyncronous
+								goto retry
+							}
+						}
 						utils.WriteLog(fmt.Sprintf("%s; %s, Error: %+v;", logPrefix, qry, qryRes.Error), utils.LogLevelError)
 						utils.WriteToFile(fmt.Sprintf("summary_%s", time.Now().Format("2006_01_02")), qry)
 					}
