@@ -51,48 +51,6 @@ func main() {
 	debugT := time.Now()
 
 	var dataChatMessages []models.ChatMessage
-
-	startDate := os.Getenv("START_DATE")
-	endDate := os.Getenv("END_DATE")
-	limit, _ := strconv.Atoi(os.Getenv("LIMIT"))
-
-reFetch:
-
-	scDB = utils.GetDBConnection()
-	//Set the filters
-	if os.Getenv("COMPANYID") != "" {
-		scDB = scDB.Joins("JOIN room_details ON chat_messages.room_id = room_details.id").Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
-	}
-
-	if startDate != "" && endDate != "" {
-		scDB = scDB.Where("chat_messages.created_at BETWEEN ? AND ?", startDate, endDate)
-	} else if startDate != "" && endDate == "" {
-		scDB = scDB.Where("chat_messages.created_at >=?", startDate)
-	} else if startDate == "" && endDate != "" {
-		scDB = scDB.Where("chat_messages.created_at <=?", endDate)
-	}
-
-	if os.Getenv("ORDER_BY") != "" {
-		sortMap := map[string]string{
-			os.Getenv("ORDER_BY"): "chat_messages." + os.Getenv("ORDER_BY"),
-		}
-		if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
-			scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
-		} else {
-			scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")])
-		}
-	}
-
-	offset, _ := strconv.Atoi(os.Getenv("OFFSET"))
-	if offset > 0 {
-		scDB = scDB.Offset(offset)
-	}
-	if limit > 0 {
-		scDB = scDB.Limit(limit)
-	}
-
-	totalFetch := 0
-
 	// Get from file
 	if os.Getenv("GET_FROM_FILE") != "" {
 		utils.WriteLog(fmt.Sprintf("%s get from file %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelDebug)
@@ -111,8 +69,6 @@ reFetch:
 			utils.WriteLog(fmt.Sprintf("%s Error unmarshalling JSON: %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelError)
 			return
 		}
-		totalFetch = len(dataChatMessages)
-
 		debug++
 		utils.WriteLog(fmt.Sprintf("%s [GET_FROM_FILE] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, len(dataChatMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 		debugT = time.Now()
@@ -123,16 +79,48 @@ reFetch:
 		}
 	} else {
 		//Fetch the data from existing PSQL database
+		//Set the filters
+		if os.Getenv("COMPANYID") != "" {
+			scDB = scDB.Joins("JOIN room_details ON chat_messages.room_id = room_details.id").Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
+		}
+
+		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
+			scDB = scDB.Where("chat_messages.created_at BETWEEN ? AND ?", os.Getenv("START_DATE"), os.Getenv("END_DATE"))
+		} else if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") == "" {
+			scDB = scDB.Where("chat_messages.created_at >=?", os.Getenv("START_DATE"))
+		} else if os.Getenv("START_DATE") == "" && os.Getenv("END_DATE") != "" {
+			scDB = scDB.Where("chat_messages.created_at <=?", os.Getenv("END_DATE"))
+		}
+
+		if os.Getenv("ORDER_BY") != "" {
+			sortMap := map[string]string{
+				os.Getenv("ORDER_BY"): "chat_messages." + os.Getenv("ORDER_BY"),
+			}
+			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
+				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
+			} else {
+				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")])
+			}
+		}
+
+		offset, _ := strconv.Atoi(os.Getenv("OFFSET"))
+		limit, _ := strconv.Atoi(os.Getenv("LIMIT"))
+		if offset > 0 {
+			scDB = scDB.Offset(offset)
+		}
+		if limit > 0 {
+			scDB = scDB.Limit(limit)
+		}
 
 		// query data dari source PSQL DB
 		if err := scDB.Preload("ChatMedia").Find(&dataChatMessages).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 			return
 		}
-		totalFetch = len(dataChatMessages)
+		totalFetch := len(dataChatMessages)
 
 		debug++
-		utils.WriteLog(fmt.Sprintf("%s [FETCH] [>= '%v' LIMIT: %v] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, limit, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+		utils.WriteLog(fmt.Sprintf("%s [FETCH] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 		debugT = time.Now()
 	}
 
@@ -140,7 +128,7 @@ reFetch:
 	var errorMessages []models.ChatMessage
 	var errorDuplicates []models.ChatMessage
 	totalInserted := 0 //success insert
-	for i, dataChatMessageEx := range dataChatMessages {
+	for _, dataChatMessageEx := range dataChatMessages {
 		var payload string
 		messageType := "text"
 		textMessage := ""
@@ -351,31 +339,22 @@ reFetch:
 			DeletedBy:         uuid.Nil,
 		}
 
-		err := dstDB.Create(&mChatMessages).Error
-		if err != nil {
+		if err := dstDB.Create(&mChatMessages).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
 			dataChatMessageEx.Error = err.Error()
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
 					errorDuplicates = append(errorDuplicates, dataChatMessageEx)
+					continue
 				}
 			}
 			errorMessages = append(errorMessages, dataChatMessageEx)
+			continue
 		}
 		totalInserted++
-
-		if i >= limit {
-			debug++
-			utils.WriteLog(fmt.Sprintf("%s [PSQL] [>= '%v' LIMIT: %v] TOTAL_FETCH: %d; TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, limit, totalFetch, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
-
-			startDate = dataChatMessageEx.CreatedAt.Format("2006-01-02 15:04:05.999999999+07")
-			utils.WriteLog(fmt.Sprintf("last created_at:%v; set startDate:%v\n", dataChatMessageEx.CreatedAt, startDate), utils.LogLevelDebug)
-
-			goto reFetch
-		}
 	}
-	//debug++
-	//utils.WriteLog(fmt.Sprintf("%s [PSQL] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+	debug++
+	utils.WriteLog(fmt.Sprintf("%s [PSQL] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
 	//write error to file
 	if len(errorMessages) > 0 {
