@@ -353,7 +353,7 @@ reFetch:
 
 		err := dstDB.Create(&mChatMessages).Error
 		if err != nil {
-			utils.WriteLog(fmt.Sprintf("%s; [%v][>= '%v' <= '%v' LIMIT: %v] insert error: %v; id: %v", logPrefix, i, startDate, endDate, limit, err, dataChatMessageEx.Id), utils.LogLevelError)
+			utils.WriteLog(fmt.Sprintf("%s; [%v][>= '%v' <= '%v' LIMIT: %v] TOTAL_FETCH: %d; insert error: %v; id: %v", logPrefix, i, startDate, endDate, limit, totalFetch, err, dataChatMessageEx.Id), utils.LogLevelError)
 			dataChatMessageEx.Error = err.Error()
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
