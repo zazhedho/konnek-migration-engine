@@ -39,7 +39,7 @@ func main() {
 	}(dstDB)
 
 	logID := uuid.NewV4()
-	appName := "chat_messages"
+	appName := "chat_messages_bulk"
 	if os.Getenv("APP_NAME") != "" {
 		appName = os.Getenv("APP_NAME")
 	}
