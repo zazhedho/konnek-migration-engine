@@ -126,13 +126,13 @@ reFetch:
 
 		// query data dari source PSQL DB
 		if err := scDB.Preload("ChatMedia").Find(&dataChatMessages).Error; err != nil {
-			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+			utils.WriteLog(fmt.Sprintf("%s; [>= '%v' <= '%v' LIMIT: %v] fetch error: %v", logPrefix, startDate, endDate, limit, err), utils.LogLevelError)
 			return
 		}
 		totalFetch = len(dataChatMessages)
 
 		debug++
-		utils.WriteLog(fmt.Sprintf("%s [FETCH] [>= '%v' LIMIT: %v] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, limit, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+		utils.WriteLog(fmt.Sprintf("%s [FETCH] [>= '%v' <= '%v' LIMIT: %v] TOTAL_FETCH: %d DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, endDate, limit, totalFetch, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 		debugT = time.Now()
 	}
 
@@ -358,18 +358,19 @@ reFetch:
 			if errCode, ok := err.(*pq.Error); ok {
 				if errCode.Code == "23505" { //unique_violation
 					errorDuplicates = append(errorDuplicates, dataChatMessageEx)
+				} else {
+					errorMessages = append(errorMessages, dataChatMessageEx)
 				}
 			}
-			errorMessages = append(errorMessages, dataChatMessageEx)
 		}
 		totalInserted++
 
 		if i >= limit {
 			debug++
-			utils.WriteLog(fmt.Sprintf("%s [PSQL] [>= '%v' LIMIT: %v] TOTAL_FETCH: %d; TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, limit, totalFetch, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
+			utils.WriteLog(fmt.Sprintf("%s [PSQL] [>= '%v' <= '%v' LIMIT: %v] TOTAL_FETCH: %d; TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, endDate, limit, totalFetch, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
 			startDate = dataChatMessageEx.CreatedAt.Format("2006-01-02 15:04:05.999999999+07")
-			utils.WriteLog(fmt.Sprintf("last created_at:%v; set startDate:%v\n", dataChatMessageEx.CreatedAt, startDate), utils.LogLevelDebug)
+			utils.WriteLog(fmt.Sprintf("last created_at:%v; set startDate:%v; endDate:%v\n", dataChatMessageEx.CreatedAt, startDate, endDate), utils.LogLevelDebug)
 
 			goto reFetch
 		}
