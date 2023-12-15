@@ -47,8 +47,6 @@ func main() {
 	utils.WriteLog(fmt.Sprintf("%s start...", logPrefix), utils.LogLevelDebug)
 
 	tStart := time.Now()
-	debug := 0
-	debugT := time.Now()
 
 	var dataChatMessages []models.ChatMessage
 
@@ -56,9 +54,13 @@ func main() {
 	endDate := os.Getenv("END_DATE")
 	limit, _ := strconv.Atoi(os.Getenv("LIMIT"))
 
+	loopCount := 0
 reFetch:
-
 	scDB = utils.GetDBConnection()
+
+	debug := 0
+	debugT := time.Now()
+
 	//Set the filters
 	if os.Getenv("COMPANYID") != "" {
 		scDB = scDB.Joins("JOIN room_details ON chat_messages.room_id = room_details.id").Where("room_details.company_id = ?", os.Getenv("COMPANYID"))
@@ -140,6 +142,8 @@ reFetch:
 	var errorMessages []models.ChatMessage
 	var errorDuplicates []models.ChatMessage
 	totalInserted := 0 //success insert
+	debugT = time.Now()
+
 	for i, dataChatMessageEx := range dataChatMessages {
 		var payload string
 		messageType := "text"
@@ -370,8 +374,9 @@ reFetch:
 			utils.WriteLog(fmt.Sprintf("%s [PSQL] [>= '%v' <= '%v' LIMIT: %v] TOTAL_FETCH: %d; TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, startDate, endDate, limit, totalFetch, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
 			startDate = dataChatMessageEx.CreatedAt.Format("2006-01-02 15:04:05.999999999+07")
-			utils.WriteLog(fmt.Sprintf("last created_at:%v; set startDate:%v; endDate:%v\n", dataChatMessageEx.CreatedAt, startDate, endDate), utils.LogLevelDebug)
+			utils.WriteLog(fmt.Sprintf("%s [%v] last created_at:%v; set startDate:%v; endDate:%v; TOTAL_INSERTED: %d; DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;\n", logPrefix, loopCount, dataChatMessageEx.CreatedAt, startDate, endDate, totalInserted, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 
+			loopCount++
 			goto reFetch
 		}
 	}
