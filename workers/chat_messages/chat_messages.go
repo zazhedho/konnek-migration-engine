@@ -125,6 +125,7 @@ reFetch:
 		// query data dari source PSQL DB
 		if err := scDB.Preload("ChatMedia").Find(&dataChatMessages).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
+			return
 		}
 		totalFetch = len(dataChatMessages)
 
@@ -167,7 +168,7 @@ reFetch:
 		var payloadTemplate string
 
 		if err := json.Unmarshal([]byte(dataChatMessageEx.Message), &payloadDecode); err != nil {
-			utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v", logPrefix, err), utils.LogLevelError)
+			utils.WriteLog(fmt.Sprintf("%s; can't Unmarshal; type is 'text': %v; data: %v", logPrefix, err, dataChatMessageEx.Message), utils.LogLevelError)
 		} else {
 			if v, ok := payloadDecode["payload"]; ok {
 				switch v.(type) {
@@ -214,25 +215,44 @@ reFetch:
 				var listMessage models.ListMessage
 
 				listMessage.Body.Title = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["body"].(map[string]interface{})["text"].(string)
-				listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
-				listMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
-				listMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
-
-				payloadSection := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"].([]interface{})
+				if v, ok := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"]; ok {
+					listMessage.Header.Text = v.(map[string]interface{})["text"].(string)
+					listMessage.Header.Text = v.(map[string]interface{})["type"].(string)
+				}
+				if v, ok := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"]; ok {
+					listMessage.Footer.Text = v.(map[string]interface{})["text"].(string)
+				}
 				var listSection []models.Section
-				for _, section := range payloadSection {
-					actions = []models.Action{}
-					for _, row := range section.(map[string]interface{})["rows"].([]interface{}) {
+				var payloadSection []interface{}
+				if v, ok := payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["sections"]; ok {
+					payloadSection = v.([]interface{})
+					for _, section := range payloadSection {
+						actions = []models.Action{}
+						for _, row := range section.(map[string]interface{})["rows"].([]interface{}) {
+							actions = append(actions, models.Action{
+								Description: row.(map[string]interface{})["description"].(string),
+								Key:         row.(map[string]interface{})["id"].(string),
+								Title:       row.(map[string]interface{})["title"].(string),
+							})
+						}
+						listSection = append(listSection, models.Section{
+							Actions: actions,
+						})
+					}
+				} else if v, ok = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["action"].(map[string]interface{})["buttons"]; ok {
+					payloadSection = v.([]interface{})
+					for _, button := range payloadSection {
+						actions = []models.Action{}
 						actions = append(actions, models.Action{
-							Description: row.(map[string]interface{})["description"].(string),
-							Key:         row.(map[string]interface{})["id"].(string),
-							Title:       row.(map[string]interface{})["title"].(string),
+							Key:   button.(map[string]interface{})["reply"].(map[string]interface{})["id"].(string),
+							Title: button.(map[string]interface{})["reply"].(map[string]interface{})["title"].(string),
 						})
 					}
 					listSection = append(listSection, models.Section{
 						Actions: actions,
 					})
 				}
+
 				listMessage.Body.Sections = listSection
 				listMessageByte, _ := json.Marshal(listMessage)
 				payload = string(listMessageByte)
@@ -290,9 +310,13 @@ reFetch:
 				messageType = models.MessageTemplate
 
 				var templateMessage models.TemplateMessage
-				templateMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
-				templateMessage.Header.Type = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
-				templateMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"] != nil {
+					templateMessage.Header.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["text"].(string)
+					templateMessage.Header.Type = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["header"].(map[string]interface{})["type"].(string)
+				}
+				if payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"] != nil {
+					templateMessage.Footer.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["footer"].(map[string]interface{})["text"].(string)
+				}
 				templateMessage.Body.Text = payloadDecode["payload"].(map[string]interface{})["items"].(map[string]interface{})["body"].(map[string]interface{})["text"].(string)
 
 				templateMessageByte, _ := json.Marshal(templateMessage)
