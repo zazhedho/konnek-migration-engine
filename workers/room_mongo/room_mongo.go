@@ -232,6 +232,26 @@ func main() {
 		totalInsertedMdb++
 		utils.WriteLog(fmt.Sprintf("%s [%v] TOTAL_INSERTED: %d/%v; TOTAL TIME EXECUTION: %s;", logPrefix, fetchRoom.Id, totalInsertedMdb, len(dataRooms), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	}
+
+	// Write error messages to a text file
+	formattedTime := appName + "_" + time.Now().Format("2006-01-02_150405")
+	if len(errorMessages) > 0 {
+		createFIle, errCreate := os.Create(fmt.Sprintf("error_messages_%s.log", formattedTime))
+		if errCreate != nil {
+			utils.WriteLog(fmt.Sprintf("%s Failed to create error_messages_%s.log : %v", logPrefix, formattedTime, errCreate), utils.LogLevelError)
+			return
+		}
+		defer createFIle.Close()
+
+		for _, errMsg := range errorMessages {
+			_, errWrite := createFIle.WriteString(errMsg + "\n")
+			if errWrite != nil {
+				utils.WriteLog(fmt.Sprintf("%s Failed to write to error_messages_%s.log : %v", logPrefix, formattedTime, errWrite), utils.LogLevelError)
+			}
+		}
+		utils.WriteLog(fmt.Sprintf("%s Error messages written to error_messages_%s.log", logPrefix, formattedTime), utils.LogLevelInfo)
+	}
+
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [MongoDB] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalInsertedMdb, errCountMdb, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
 }
