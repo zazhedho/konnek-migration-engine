@@ -192,10 +192,10 @@ func main() {
 			}
 
 			//delete from mongoDB room_close after insert into mongoDB room_open
-			if _, err = mongDb.Delete(fetchRoom.CompanyId.String()+"_room_closed", filter); err != nil {
+			if _, err = mongDb.DeleteMany(fetchRoom.CompanyId.String()+"_room_closed", filter); err != nil {
 				utils.WriteLog(fmt.Sprintf("%s; failed delete from mongoDB: %s; error: %v", logPrefix, fetchRoom.Id.String(), err), utils.LogLevelError)
 				if fetchRoom.AgentUserId != uuid.Nil { //delete from mongoDB room_closed_agent if agent exists
-					_, err = mongDb.Delete(fetchRoom.AgentUserId.String()+"_room_closed_agent", filter)
+					_, err = mongDb.DeleteMany(fetchRoom.AgentUserId.String()+"_room_closed_agent", filter)
 				}
 			}
 		} else {
@@ -206,6 +206,8 @@ func main() {
 				Name:     fetchRoom.AgentName,
 			}
 
+			//first, delete _room_closed to avoid duplicates
+			_, err = mongDb.DeleteMany(fetchRoom.CompanyId.String()+"_room_closed", filter)
 			//insert into mongoDB room_closed
 			if _, err = mongDb.Store(fetchRoom.CompanyId.String()+"_room_closed", docRoomClosed); err != nil {
 				utils.WriteLog(fmt.Sprintf("%s; failed insert room_closed: %s; error: %v", logPrefix, fetchRoom.Id, err), utils.LogLevelError)
@@ -214,6 +216,7 @@ func main() {
 				continue
 			}
 			if fetchRoom.AgentUserId != uuid.Nil { //insert into mongoDB room_closed_agent
+				_, err = mongDb.DeleteMany(fetchRoom.AgentUserId.String()+"_room_closed_agent", filter)
 				if _, err = mongDb.Store(fetchRoom.AgentUserId.String()+"_room_closed_agent", docRoomClosed); err != nil {
 					utils.WriteLog(fmt.Sprintf("%s; failed insert room_closed_agent: %s; error: %v", logPrefix, fetchRoom.Id, err), utils.LogLevelError)
 					errCountMdb++
@@ -222,7 +225,7 @@ func main() {
 				}
 			}
 			//delete from mongoDB room_open
-			if _, err = mongDb.Delete(fetchRoom.CompanyId.String()+"_room_open", filter); err != nil {
+			if _, err = mongDb.DeleteMany(fetchRoom.CompanyId.String()+"_room_open", filter); err != nil {
 				utils.WriteLog(fmt.Sprintf("%s; failed delete from room_open: %s; error: %v", logPrefix, fetchRoom.Id, err), utils.LogLevelError)
 			}
 		}
