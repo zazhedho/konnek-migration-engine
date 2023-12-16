@@ -182,7 +182,7 @@ func main() {
 		//insert into mongodb room_open
 		if fetchRoom.Status != -1 {
 			//first, delete room_open to avoid duplicates
-			_, err = mongDb.DeleteMany(os.Getenv("COMPANYID")+"_room_open", filter)
+			_, err = mongDb.DeleteMany(fetchRoom.CompanyId.String()+"_room_open", filter)
 
 			if _, err = mongDb.Store(fetchRoom.CompanyId.String()+"_room_open", mongoData); err != nil {
 				utils.WriteLog(fmt.Sprintf("%s; failed insert room_open: %s; error: %v", logPrefix, fetchRoom.Id.String(), err), utils.LogLevelError)
