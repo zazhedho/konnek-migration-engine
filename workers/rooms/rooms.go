@@ -94,7 +94,7 @@ func main() {
 
 		if os.Getenv("ORDER_BY") != "" {
 			sortMap := map[string]string{
-				os.Getenv("ORDER_BY"): "rooms." + os.Getenv("ORDER_BY"),
+				os.Getenv("ORDER_BY"): os.Getenv("ORDER_BY"),
 			}
 			if strings.ToUpper(os.Getenv("ORDER_DIRECTION")) == "DESC" {
 				scDB = scDB.Order(sortMap[os.Getenv("ORDER_BY")] + " DESC")
