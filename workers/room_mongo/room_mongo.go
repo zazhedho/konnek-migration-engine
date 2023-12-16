@@ -227,6 +227,7 @@ func main() {
 			}
 		}
 		totalInsertedMdb++
+		utils.WriteLog(fmt.Sprintf("%s [%v] TOTAL_INSERTED: %d/%v; TOTAL TIME EXECUTION: %s;", logPrefix, fetchRoom.Id, totalInsertedMdb, len(dataRooms), time.Now().Sub(tStart)), utils.LogLevelDebug)
 	}
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [MongoDB] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL TIME EXECUTION: %s;", logPrefix, totalInsertedMdb, errCountMdb, debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
