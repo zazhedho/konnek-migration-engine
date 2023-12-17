@@ -115,7 +115,9 @@ func main() {
 			db = db.Limit(limit)
 		}
 
-		if err := db.Preload("Room").Preload("Division").Preload("Agent").Find(&lists).Error; err != nil {
+		if err := db.Preload("Room", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Customer").Preload("Company")
+		}).Preload("Division").Preload("Agent").Preload("UserOpenBy").Preload("UserHandoverBy").Preload("UserCloseBy").Find(&lists).Error; err != nil {
 			utils.WriteLog(fmt.Sprintf("%s; fetch error: %v", logPrefix, err), utils.LogLevelError)
 			return
 		}
