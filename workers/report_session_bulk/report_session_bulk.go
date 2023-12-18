@@ -381,8 +381,8 @@ reFetch:
 					fmt.Sprintf("'%s'", list.OpenTime.Format(utils.LayoutDate)),
 					fmt.Sprintf("'%s'", list.Room.ChannelCode),
 					fmt.Sprintf("'%s'", list.Room.CustomerUserId),
-					fmt.Sprintf("'%s'", list.Room.Customer.Username),
-					fmt.Sprintf("'%s'", list.Room.Customer.Name),
+					fmt.Sprintf("'%s'", strings.ReplaceAll(list.Room.Customer.Username, "'", "''")), // handle customer name with ('): Julia Sari Sa'diyah
+					fmt.Sprintf("'%s'", strings.ReplaceAll(list.Room.Customer.Name, "'", "''")),     // handle customer name with ('): Julia Sari Sa'diyah
 					fmt.Sprintf("'%s'", list.Room.Customer.Tags),
 					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
 					fmt.Sprintf("'%s'", "migration-engine"),
@@ -413,8 +413,8 @@ reFetch:
 				vals := append(summaryVals,
 					fmt.Sprintf("'%s'", list.Room.ChannelCode),
 					fmt.Sprintf("'%s'", list.Room.CustomerUserId),
-					fmt.Sprintf("'%s'", list.Room.Customer.Username),
-					fmt.Sprintf("'%s'", list.Room.Customer.Name),
+					fmt.Sprintf("'%s'", strings.ReplaceAll(list.Room.Customer.Username, "'", "''")), // handle customer name with ('): Julia Sari Sa'diyah
+					fmt.Sprintf("'%s'", strings.ReplaceAll(list.Room.Customer.Name, "'", "''")),     // handle customer name with ('): Julia Sari Sa'diyah
 					fmt.Sprintf("'%s'", list.Room.Customer.Tags),
 					fmt.Sprintf("'%s'", time.Now().Format(time.RFC3339Nano)),
 					fmt.Sprintf("'%s'", "migration-engine"),
