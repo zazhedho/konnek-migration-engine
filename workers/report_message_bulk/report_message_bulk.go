@@ -53,7 +53,7 @@ func main() {
 
 	loopCount := 0
 reFetch:
-	db = utils.GetDBConnection()
+	db = utils.GetDBNewConnection()
 
 	debug := 0
 	debugT := time.Now()
@@ -134,6 +134,7 @@ reFetch:
 		debugT = time.Now()
 	}
 
+	return
 	//Insert into database report
 	var errorMessages []models.FetchReportReportMessage
 	var errorDuplicates []models.FetchReportReportMessage
