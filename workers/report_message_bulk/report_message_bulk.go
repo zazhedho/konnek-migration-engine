@@ -134,7 +134,6 @@ reFetch:
 		debugT = time.Now()
 	}
 
-	return
 	//Insert into database report
 	var errorMessages []models.FetchReportReportMessage
 	var errorDuplicates []models.FetchReportReportMessage
