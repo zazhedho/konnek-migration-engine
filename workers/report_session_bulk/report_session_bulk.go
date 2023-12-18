@@ -54,7 +54,7 @@ func main() {
 
 	loopCount := 0
 reFetch:
-	db = utils.GetDBConnection()
+	db = utils.GetDBNewConnection()
 
 	debug := 0
 	debugT := time.Now()
