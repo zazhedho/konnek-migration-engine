@@ -48,7 +48,7 @@ func main() {
 	debug := 0
 	debugT := time.Now()
 
-	var comConfSc []models.Configuration
+	var comConfSc []models.ConfigurationApp
 
 	if os.Getenv("GET_FROM_FILE") != "" {
 		utils.WriteLog(fmt.Sprintf("%s get from file %s", logPrefix, os.Getenv("GET_FROM_FILE")), utils.LogLevelDebug)
@@ -100,8 +100,8 @@ func main() {
 	successCount := 0
 	errorCount := 0
 
-	var errorMessages []models.Configuration
-	var errorDuplicates []models.Configuration
+	var errorMessages []models.ConfigurationApp
+	var errorDuplicates []models.ConfigurationApp
 
 	for _, comConf := range comConfSc {
 		var comConfDst models.CompanyConfig
@@ -155,17 +155,9 @@ func main() {
 		comConfDst.SdkBot = sdk.SdkBotKataAi
 		comConfDst.Blacklist = comConf.BlackList
 		comConfDst.InquirySandeza = comConf.InquirySandeza
-		comConfDst.KeywordFilterStatus = comConf.KeywordFilterStatus
-		comConfDst.KeywordFilter = comConf.KeywordFilter
-		comConfDst.KeywordGreetings = comConf.KeywordGreetings
-		comConfDst.MaintenanceStatus = comConf.MaintenanceStatus
-		comConfDst.MaintenanceMessage = comConf.MaintenanceMessage
-		comConfDst.KeywordMaxInvalid = comConf.KeywordGreetingsLimit
-
-		KeyInterval := comConf.KeywordGreetingsLimitDuration / 60
-
-		comConfDst.KeywordInterval = KeyInterval
-		comConfDst.KeywordBlockDuration = comConf.KeywordGreetingsLimitDuration
+		comConfDst.SpamMaxChat = comConf.MaxChat
+		comConfDst.SpamIntervalChat = comConf.IntervalChat
+		comConfDst.SpamBlockDuration = comConf.BlockDuration
 
 		insertedCount++
 		if err := dstDB.Create(&comConfDst).Error; err != nil {
