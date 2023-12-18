@@ -103,7 +103,6 @@ func main() {
 		debugT = time.Now()
 	}
 
-	return
 	insertedCount := 0
 	successCount := 0
 	errorCount := 0
