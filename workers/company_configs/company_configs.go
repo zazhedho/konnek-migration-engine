@@ -80,7 +80,7 @@ func main() {
 		scDB = scDB.Unscoped()
 		if os.Getenv("COMPANYID") != "" {
 			companyId := strings.Split(os.Getenv("COMPANYID"), ",")
-			scDB = scDB.Where("id IN (?)", companyId)
+			scDB = scDB.Where("company_id IN (?)", companyId)
 		}
 
 		//Fetch companies existing
