@@ -101,8 +101,8 @@ type FetchReportSession struct {
 	DivisionId uuid.UUID     `json:"division_id" gorm:"column:division_id"`
 	Division   DivisionReeng `json:"division" gorm:"Foreignkey:DivisionId;association_foreignkey:Id;"`
 
-	AgentUserId uuid.UUID `json:"agent_user_id" gorm:"column:agent_user_id"`
-	Agent       Users     `json:"agent" gorm:"Foreignkey:AgentUserId;association_foreignkey:Id;"`
+	AgentUserId uuid.UUID   `json:"agent_user_id" gorm:"column:agent_user_id"`
+	Agent       ReportUsers `json:"agent" gorm:"Foreignkey:AgentUserId;association_foreignkey:Id;"`
 
 	//LastMessageId uuid.UUID `json:"last_chat_message_id" gorm:"column:last_chat_message_id"`
 	Categories string `json:"categories" gorm:"column:categories"`
@@ -110,14 +110,14 @@ type FetchReportSession struct {
 	BotStatus bool `json:"bot_status" gorm:"bot_status"`
 	Status    int  `json:"status" gorm:"column:status"`
 
-	OpenBy     uuid.UUID `json:"open_by" gorm:"column:open_by"`
-	UserOpenBy Users     `json:"user_open_by" gorm:"Foreignkey:OpenBy;association_foreignkey:Id;"`
+	OpenBy     uuid.UUID   `json:"open_by" gorm:"column:open_by"`
+	UserOpenBy ReportUsers `json:"user_open_by" gorm:"Foreignkey:OpenBy;association_foreignkey:Id;"`
 
-	HandoverBy     uuid.UUID `json:"handover_by" gorm:"column:handover_by"`
-	UserHandoverBy Users     `json:"user_handover_by" gorm:"Foreignkey:HandoverBy;association_foreignkey:Id;"`
+	HandoverBy     uuid.UUID   `json:"handover_by" gorm:"column:handover_by"`
+	UserHandoverBy ReportUsers `json:"user_handover_by" gorm:"Foreignkey:HandoverBy;association_foreignkey:Id;"`
 
-	CloseBy     uuid.UUID `json:"close_by" gorm:"column:close_by"`
-	UserCloseBy Users     `json:"user_close_by" gorm:"Foreignkey:CloseBy;association_foreignkey:Id;"`
+	CloseBy     uuid.UUID   `json:"close_by" gorm:"column:close_by"`
+	UserCloseBy ReportUsers `json:"user_close_by" gorm:"Foreignkey:CloseBy;association_foreignkey:Id;"`
 
 	SlaFrom      string `json:"sla_from" gorm:"columns:sla_from"`
 	SlaTo        string `json:"sla_to" gorm:"column:sla_to"`
@@ -152,8 +152,19 @@ type FetchReportRoom struct {
 	CompanyId uuid.UUID    `json:"company_id" gorm:"column:company_id"`
 	Company   CompanyReeng `json:"company" gorm:"Foreignkey:CompanyId;association_foreignkey:Id;"`
 
-	CustomerUserId uuid.UUID `json:"customer_user_id" gorm:"column:customer_user_id"`
-	Customer       Users     `json:"customer" gorm:"Foreignkey:CustomerUserId;association_foreignkey:Id;"`
+	CustomerUserId uuid.UUID   `json:"customer_user_id" gorm:"column:customer_user_id"`
+	Customer       ReportUsers `json:"customer" gorm:"Foreignkey:CustomerUserId;association_foreignkey:Id;"`
 
 	ChannelCode string `json:"channel_code" gorm:"column:channel_code"`
+}
+
+func (ReportUsers) TableName() string {
+	return "users"
+}
+
+type ReportUsers struct {
+	Id       uuid.UUID `json:"id" gorm:"column:id"`
+	Username string    `json:"username" gorm:"column:username"`
+	Name     string    `json:"name" gorm:"column:name"`
+	Tags     string    `json:"tags" gorm:"column:tags"`
 }
