@@ -10,6 +10,7 @@ import (
 	"konnek-migration/models"
 	"konnek-migration/utils"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -76,7 +77,8 @@ func main() {
 		//Fetch from database
 		scDB = scDB.Unscoped()
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+			companyId := strings.Split(os.Getenv("COMPANYID"), ",")
+			scDB = scDB.Where("company_id IN (?)", companyId)
 		}
 
 		//Fetch companies existing
