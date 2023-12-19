@@ -10,6 +10,7 @@ import (
 	"konnek-migration/models"
 	"konnek-migration/utils"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -79,7 +80,8 @@ func main() {
 		scDB = scDB.Preload("Channel")
 
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+			companyId := strings.Split(os.Getenv("COMPANYID"), ",")
+			scDB = scDB.Where("company_id IN (?)", companyId)
 		}
 
 		if os.Getenv("CHANNELID") != "" {
