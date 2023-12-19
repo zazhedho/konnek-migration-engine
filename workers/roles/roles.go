@@ -19,13 +19,6 @@ import (
 func main() {
 	utils.Init()
 
-	companyId, err := uuid.FromString(os.Getenv("COMPANYID"))
-	if err != nil {
-		utils.WriteLog(fmt.Sprintf("parse uuid companyId: %s error: %v", os.Getenv("COMPANYID"), err), utils.LogLevelError)
-		fmt.Println("parse uuid companyId; err: ", err)
-		return
-	}
-
 	// Create source DB connection
 	scDB := utils.GetDBConnection()
 	defer func(scDB *gorm.DB) {
@@ -135,59 +128,72 @@ func main() {
 	var errorDuplicates []models.Role
 	totalInserted := 0
 
-	for _, list := range lists {
-		var isAgent bool
-		var isAdmin bool
-		urlAfterLogin := "/dashboard/summary"
-		if list.Name == models.RoleAgent {
-			isAgent = true
-			urlAfterLogin = "/chat/open"
-		} else if list.Name == models.RoleAdmin {
-			isAdmin = true
-			urlAfterLogin = "/channel"
-		} else if list.Name == models.RoleAdminKonnek || list.Name == models.RoleBot || list.Name == models.RoleCustomer {
-			urlAfterLogin = ""
+	companyID := strings.Split(os.Getenv("COMPANYID"), ",")
+
+	for i := 0; i < len(companyID); i++ {
+		companyId, err := uuid.FromString(companyID[i])
+		if err != nil {
+			utils.WriteLog(fmt.Sprintf("parse uuid companyId: %s error: %v", companyId, err), utils.LogLevelError)
+			fmt.Println("parse uuid companyId; err: ", err)
+			return
 		}
+		utils.WriteLog(fmt.Sprintf("parse uuid companyId: %s; index : %v", companyId, i), utils.LogLevelDebug)
 
-		menuAccess := ""
-		if _, ok := models.MenuAccessUserMap[list.Name]; ok {
-			menuAccess = models.MenuAccessUserMap[list.Name]
-		}
-
-		var m models.Roles
-		//m.Id = list.Id
-		m.Name = list.Name
-		m.IsAgent = isAgent
-		m.IsAdmin = isAdmin
-		m.UrlAfterLogin = urlAfterLogin
-		m.Status = true
-		m.MenuAccess = menuAccess
-		m.CreatedAt = list.CreatedAt
-		m.CreatedBy = uuid.Nil
-		m.UpdatedAt = list.UpdatedAt
-		m.UpdatedBy = uuid.Nil
-		m.DeletedAt = list.DeletedAt
-		m.DeletedBy = uuid.Nil
-
-		if list.Name != models.RoleAdminKonnek {
-			m.CompanyId = companyId
-		}
-
-		//	reiInsertCount := 0
-		//reInsert:
-		if err := dstDB.Create(&m).Error; err != nil {
-			utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
-			list.Error = err.Error()
-			if errCode, ok := err.(*pq.Error); ok {
-				if errCode.Code == "23505" { //unique_violation
-					errorDuplicates = append(errorDuplicates, list)
-					continue
-				}
+		for _, list := range lists {
+			var isAgent bool
+			var isAdmin bool
+			urlAfterLogin := "/dashboard/summary"
+			if list.Name == models.RoleAgent {
+				isAgent = true
+				urlAfterLogin = "/chat/open"
+			} else if list.Name == models.RoleAdmin {
+				isAdmin = true
+				urlAfterLogin = "/channel"
+			} else if list.Name == models.RoleAdminKonnek || list.Name == models.RoleBot || list.Name == models.RoleCustomer {
+				urlAfterLogin = ""
 			}
-			errorMessages = append(errorMessages, list)
-			continue
+
+			menuAccess := ""
+			if _, ok := models.MenuAccessUserMap[list.Name]; ok {
+				menuAccess = models.MenuAccessUserMap[list.Name]
+			}
+
+			var m models.Roles
+			//m.Id = list.Id
+			m.Name = list.Name
+			m.IsAgent = isAgent
+			m.IsAdmin = isAdmin
+			m.UrlAfterLogin = urlAfterLogin
+			m.Status = true
+			m.MenuAccess = menuAccess
+			m.CreatedAt = list.CreatedAt
+			m.CreatedBy = uuid.Nil
+			m.UpdatedAt = list.UpdatedAt
+			m.UpdatedBy = uuid.Nil
+			m.DeletedAt = list.DeletedAt
+			m.DeletedBy = uuid.Nil
+
+			if list.Name != models.RoleAdminKonnek {
+				m.CompanyId = companyId
+			}
+
+			//utils.WriteLog(fmt.Sprintf("Models users: %v; index : %v", m, i), utils.LogLevelDebug)
+			//	reiInsertCount := 0
+			//reInsert:
+			if err := dstDB.Create(&m).Error; err != nil {
+				utils.WriteLog(fmt.Sprintf("%s; insert error: %v", logPrefix, err), utils.LogLevelError)
+				list.Error = err.Error()
+				if errCode, ok := err.(*pq.Error); ok {
+					if errCode.Code == "23505" { //unique_violation
+						errorDuplicates = append(errorDuplicates, list)
+						continue
+					}
+				}
+				errorMessages = append(errorMessages, list)
+				continue
+			}
+			totalInserted++
 		}
-		totalInserted++
 	}
 	debug++
 	utils.WriteLog(fmt.Sprintf("%s [INSERT] TOTAL_INSERTED: %d; TOTAL_ERROR: %v DEBUG: %d; TIME: %s; TOTAL_TIME: %s;", logPrefix, totalInserted, len(errorMessages), debug, time.Now().Sub(debugT), time.Now().Sub(tStart)), utils.LogLevelDebug)
