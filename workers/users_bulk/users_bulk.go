@@ -66,7 +66,8 @@ reFetch:
 	scDB = scDB.Unscoped()
 	//Set the filters
 	if os.Getenv("COMPANYID") != "" {
-		scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+		companyId := strings.Split(os.Getenv("COMPANYID"), ",")
+		scDB = scDB.Where("company_id IN (?)", companyId)
 	}
 
 	if os.Getenv("ROLES_ID") != "" {
