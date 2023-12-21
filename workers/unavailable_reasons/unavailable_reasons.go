@@ -143,7 +143,6 @@ func main() {
 		m.UpdatedAt = list.UpdatedAt
 		m.UpdatedBy = list.UpdatedBy
 		m.DeletedAt = list.DeletedAt
-		m.DeletedBy = list.DeletedBy
 
 		//	reiInsertCount := 0
 		//reInsert:
