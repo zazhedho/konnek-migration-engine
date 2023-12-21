@@ -142,16 +142,16 @@ func main() {
 		var sessionDuration int64
 
 		if list.QueTime != nil && list.AssignTime != nil {
-			waitingDuration = int64(list.QueTime.Sub(*list.AssignTime).Seconds())
+			waitingDuration = int64(list.AssignTime.Sub(*list.QueTime).Seconds())
 		}
 		if list.AssignTime != nil && list.FirstResponseTime != nil {
-			frDuration = int64(list.AssignTime.Sub(*list.FirstResponseTime).Seconds())
+			frDuration = int64(list.FirstResponseTime.Sub(*list.AssignTime).Seconds())
 		}
 		if list.AssignTime != nil && list.CloseTime != nil {
-			resolveDuration = int64(list.AssignTime.Sub(*list.CloseTime).Seconds())
+			resolveDuration = int64(list.CloseTime.Sub(*list.AssignTime).Seconds())
 		}
 		if list.OpenTime != nil && list.CloseTime != nil {
-			sessionDuration = int64(list.OpenTime.Sub(*list.CloseTime).Seconds())
+			sessionDuration = int64(list.CloseTime.Sub(*list.OpenTime).Seconds())
 		}
 
 		if reportSession {
