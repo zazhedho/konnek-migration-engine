@@ -83,7 +83,8 @@ func main() {
 		scDB = scDB.Unscoped()
 		//Set the filters
 		if os.Getenv("COMPANYID") != "" {
-			scDB = scDB.Where("company_id = ?", os.Getenv("COMPANYID"))
+			companyId := strings.Split(os.Getenv("COMPANYID"), ",")
+			scDB = scDB.Where("company_id IN (?)", companyId)
 		}
 
 		if os.Getenv("START_DATE") != "" && os.Getenv("END_DATE") != "" {
@@ -142,7 +143,6 @@ func main() {
 		m.UpdatedAt = list.UpdatedAt
 		m.UpdatedBy = list.UpdatedBy
 		m.DeletedAt = list.DeletedAt
-		m.DeletedBy = list.DeletedBy
 
 		//	reiInsertCount := 0
 		//reInsert:
