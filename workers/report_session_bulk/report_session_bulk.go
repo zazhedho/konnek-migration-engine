@@ -151,19 +151,17 @@ reFetch:
 		var resolveDuration int64
 		var sessionDuration int64
 
-		if list.AssignTime != nil || list.FirstResponseTime != nil || list.QueTime != nil || list.CloseTime != nil {
-			if !list.QueTime.IsZero() && !list.AssignTime.IsZero() {
-				waitingDuration = int64(list.AssignTime.Sub(*list.QueTime).Seconds())
-			}
-			if !list.AssignTime.IsZero() && !list.FirstResponseTime.IsZero() {
-				frDuration = int64(list.FirstResponseTime.Sub(*list.AssignTime).Seconds())
-			}
-			if !list.AssignTime.IsZero() && !list.CloseTime.IsZero() {
-				resolveDuration = int64(list.CloseTime.Sub(*list.AssignTime).Seconds())
-			}
-			if !list.QueTime.IsZero() && !list.CloseTime.IsZero() {
-				sessionDuration = int64(list.CloseTime.Sub(*list.OpenTime).Seconds())
-			}
+		if list.AssignTime != nil || list.QueTime != nil || (!list.QueTime.IsZero() && !list.AssignTime.IsZero()) {
+			waitingDuration = int64(list.AssignTime.Sub(*list.QueTime).Seconds())
+		}
+		if list.AssignTime != nil || list.FirstResponseTime != nil || (!list.AssignTime.IsZero() && !list.FirstResponseTime.IsZero()) {
+			frDuration = int64(list.FirstResponseTime.Sub(*list.AssignTime).Seconds())
+		}
+		if list.AssignTime != nil || list.CloseTime != nil || (!list.AssignTime.IsZero() && !list.CloseTime.IsZero()) {
+			resolveDuration = int64(list.CloseTime.Sub(*list.AssignTime).Seconds())
+		}
+		if list.CloseTime != nil || list.QueTime != nil || (!list.QueTime.IsZero() && !list.CloseTime.IsZero()) {
+			sessionDuration = int64(list.CloseTime.Sub(*list.OpenTime).Seconds())
 		}
 
 		if reportSession {
