@@ -122,6 +122,7 @@ func main() {
 		employeeChannelDst.CreatedBy = uuid.Nil
 		employeeChannelDst.UpdatedAt = employeeChannel.UpdatedAt
 		employeeChannelDst.UpdatedBy = uuid.Nil
+		employeeChannelDst.DeletedAt = employeeChannel.DeletedAt
 
 		insertedCount++
 		if err := dstDB.Create(&employeeChannelDst).Error; err != nil {
