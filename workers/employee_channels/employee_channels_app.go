@@ -79,7 +79,7 @@ func main() {
 
 		qry := `select ec.id, u.id as user_id, 
 			case when c.name = 'widget' then 'web' else c.name end as name,
-			u.company_id, ec.created_at, ec.updated_at, ec.deleted_at 
+			u.company_id, ec.created_at, ec.updated_at, ec.deleted_at  
 			from employee_channels ec 
 			join employees e on ec.employee_id = e.id 
 			join users u on e.user_id = u.id 
