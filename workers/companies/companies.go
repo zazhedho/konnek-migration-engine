@@ -126,6 +126,7 @@ func main() {
 		companyDst.UpdatedBy = uuid.Nil
 		companyDst.DeletedAt = company.DeletedAt
 		companyDst.DeletedBy = uuid.Nil
+		companyDst.Hosts = "[]"
 
 		insertedCount++
 		if err := dstDB.Create(&companyDst).Error; err != nil {
