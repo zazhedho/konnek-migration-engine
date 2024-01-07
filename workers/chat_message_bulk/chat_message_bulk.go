@@ -330,6 +330,12 @@ reFetch:
 				textMessage = templateMessage.Body.Text
 			}
 		}
+		//di existing from_type = 1 adalah agent, sedangkan pada RE from_type = 1 adalah customer
+		if dataChatMessageEx.FromType == 1 {
+			dataChatMessageEx.FromType = 2
+		} else if dataChatMessageEx.FromType == 2 {
+			dataChatMessageEx.FromType = 1
+		}
 
 		mChatMessages := models.ChatMessages{
 			Id:                dataChatMessageEx.Id,
